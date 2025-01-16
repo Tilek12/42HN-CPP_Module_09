@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/16 19:54:48 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/16 20:32:45 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/01/16 20:39:29 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,8 +36,8 @@ public:
 	~BitcoinExchange( void );
 
 	void		loadDatabase( const std::string& databaseFile );
-	void		evaluate( const std::string& inputFile ) const;
 	std::string	findClosestDate( const std::string& date ) const;
+	void		evaluate( const std::string& inputFile ) const;
 
 };
 

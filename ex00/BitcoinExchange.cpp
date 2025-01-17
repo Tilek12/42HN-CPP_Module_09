@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/16 19:54:39 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/16 20:42:44 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/01/17 13:06:28 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ void	BitcoinExchange::loadDatabase( const std::string& databaseFile ) {
 
 	std::ifstream	file( databaseFile );
 	if ( !file.is_open() )
-		throw std::runtime_error( "ERROR: could not open file.");
+		throw std::runtime_error( "Error: could not open file.");
 
 	std::string	line;
 	while ( std::getline( file, line ) ) {
@@ -87,3 +87,43 @@ std::string	BitcoinExchange::findClosestDate( const std::string& date ) const {
 	return it->first;
 }
 
+void	BitcoinExchange::evaluate( const std::string& inputFile ) const {
+
+	std::ifstream file( inputFile );
+	if ( !file.is_open() )
+		throw std::runtime_error( "Error: could not open file." );
+
+	std::string	line;
+	while ( std::getline( file, line ) ) {
+		std::istringstream iss( line );
+		std::string date, valueStr;
+		if ( std::getline( iss, date, '|' ) && std::getline( iss, valueStr ) ) {
+			date = date.substr( 0, date.find_last_not_of( " \t" ) + 1 );
+			valueStr = valueStr.substr( valueStr.find_first_not_of( " \t" ) );
+
+			if ( !_isValidDate( date ) ) {
+				std::cerr << "Error: bad input => " << date << std::endl;
+				continue;
+			}
+
+			if ( !_isValidValue( valueStr ) ) {
+				std::cerr << "Error: invalid value => " << valueStr << std::endl;
+				continue;
+			}
+
+			float value = std::stof( valueStr );
+			std::string closestDate = findClosestDate( date );
+			if ( closestDate.empty() ) {
+				std::cerr << "Error: no matching date were found for " << date << std::endl;
+				continue;
+			}
+
+			float rate = _database.at( closestDate );
+			std::cout << date << " => " << value << " = " << ( value * rate ) << std::endl;
+		} else {
+			std::cerr << "Error: bad input format => " << line << std::endl;
+		}
+	}
+
+	file.close();
+}

@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/16 19:54:39 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/17 20:38:18 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/01/17 21:03:06 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,6 +56,12 @@ void	BitcoinExchange::_loadDatabase( const std::string& databaseFile ) {
 		} catch ( ... ) {
 			throw std::runtime_error( "Error: invalid rate in database.");
 		}
+
+		if ( rate < 0 )
+			throw std::runtime_error( "Error: negative rate in database.");
+
+		if ( !_isValidDate( date ) )
+			throw std::runtime_error( "Error: invalid date in database.");
 
 		_database[date] = rate;
 	}

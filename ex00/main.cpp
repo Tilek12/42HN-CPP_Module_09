@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/17 13:22:09 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/17 13:28:20 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/01/17 19:47:28 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,9 +20,7 @@ int	main( int argc, char** argv ) {
 	}
 
 	try {
-		BitcoinExchange	btc;
-
-		btc.loadDatabase( "data.csv" );
+		BitcoinExchange	btc( "data.csv" );
 		btc.evaluate( argv[1] );
 	} catch ( const std::exception& e ) {
 		std::cerr << e.what() << std::endl;

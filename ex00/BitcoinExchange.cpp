@@ -6,15 +6,18 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/16 19:54:39 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/17 19:23:43 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/01/17 20:38:18 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "BitcoinExchange.hpp"
 
-BitcoinExchange::BitcoinExchange( void ) {}
+BitcoinExchange::BitcoinExchange( const std::string& databaseFile ) {
+	_loadDatabase( databaseFile );
+}
 
-BitcoinExchange::BitcoinExchange( const BitcoinExchange& other ) : _database( other._database ) {}
+BitcoinExchange::BitcoinExchange( const BitcoinExchange& other )
+	: _database( other._database ) {}
 
 BitcoinExchange&	BitcoinExchange::operator=( const BitcoinExchange& other ) {
 
@@ -25,6 +28,40 @@ BitcoinExchange&	BitcoinExchange::operator=( const BitcoinExchange& other ) {
 }
 
 BitcoinExchange::~BitcoinExchange( void ) {}
+
+void	BitcoinExchange::_loadDatabase( const std::string& databaseFile ) {
+
+	std::ifstream	file( databaseFile );
+	if ( !file.is_open() )
+		throw std::runtime_error( "Error: could not open data file.");
+
+	std::string	line;
+
+	if ( std::getline( file, line ) ) {
+		if ( line != "date,exchange_rate" )
+			throw std::runtime_error( "Error: invalid header in data file." );
+	}
+
+	while ( std::getline( file, line ) ) {
+		std::istringstream	stream( line );
+		std::string			date;
+		std::string			rateStr;
+		float				rate;
+
+		if ( !std::getline( stream, date, ',' ) || !std::getline( stream, rateStr ) )
+			throw std::runtime_error( "Error: invalid database format.");
+
+		try {
+			rate = std::stof( rateStr );
+		} catch ( ... ) {
+			throw std::runtime_error( "Error: invalid rate in database.");
+		}
+
+		_database[date] = rate;
+	}
+
+	file.close();
+}
 
 bool	BitcoinExchange::_isValidDate( const std::string& date ) const {
 
@@ -76,35 +113,6 @@ std::string	BitcoinExchange::_findClosestDate( const std::string& date ) const {
 	return it->first;
 }
 
-void	BitcoinExchange::loadDatabase( const std::string& databaseFile ) {
-
-	std::ifstream	file( databaseFile );
-	if ( !file.is_open() )
-		throw std::runtime_error( "Error: could not open data file.");
-
-	std::string	line;
-
-	if ( std::getline( file, line ) ) {
-		if ( line != "date,exchange_rate" )
-			throw std::runtime_error( "Error: invalid header in data file." );
-	}
-
-	while ( std::getline( file, line ) ) {
-		std::istringstream stream( line );
-		std::string date, rateStr;
-		if ( std::getline( stream, date, ',' ) && std::getline( stream, rateStr ) ) {
-			try {
-				float rate = std::stof( rateStr );
-				_database[date] = rate;
-			} catch ( const std::exception& ) {
-				throw std::runtime_error( "Error: invalid rate in database.");
-			}
-		}
-	}
-
-	file.close();
-}
-
 void	BitcoinExchange::evaluate( const std::string& inputFile ) const {
 
 	std::ifstream file( inputFile );
@@ -119,8 +127,10 @@ void	BitcoinExchange::evaluate( const std::string& inputFile ) const {
 	}
 
 	while ( std::getline( file, line ) ) {
-		std::istringstream stream( line );
-		std::string date, valueStr;
+		std::istringstream	stream( line );
+		std::string			date;
+		std::string			valueStr;
+
 		if ( std::getline( stream, date, '|' ) && std::getline( stream, valueStr ) ) {
 			date.erase( date.find_last_not_of( " \t\n\r" ) + 1 );
 			valueStr.erase( 0, valueStr.find_first_not_of( " \t\n\r" ) );

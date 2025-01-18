@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/16 19:54:48 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/17 19:47:09 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/01/18 13:19:32 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,8 +24,9 @@ class	BitcoinExchange {
 
 private:
 
-	std::map<std::string, float>	_database;
+	std::map<std::string, double>	_database;
 
+	std::string	_trim( const std::string& str ) const;
 	void		_loadDatabase( const std::string& databaseFile );
 	bool		_isValidDate( const std::string& date ) const;
 	std::string	_checkValue( const std::string& valueStr ) const;

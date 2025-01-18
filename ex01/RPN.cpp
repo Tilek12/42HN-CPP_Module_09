@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/18 19:45:20 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/18 20:32:51 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/01/18 20:42:56 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ int	RPN::calculate( const std::string& expression ) {
 
 	while ( tokens >> token ) {
 		if ( std::isdigit( token[0] ) && token.size() == 1 ) {
-			_stack.push( token[0] - '0' );
+			_stack.push( std::stoi( token ) );
 		} else if ( token == "+" || token == "-" || token == "*" || token == "/") {
 			if ( _stack.size() < 2 )
 				throw std::invalid_argument( "Malformed expression." );

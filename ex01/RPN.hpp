@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/18 19:36:39 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/18 19:43:35 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/01/18 20:33:53 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,8 @@
 
 #include <stack>
 #include <string>
+#include <sstream>
+#include <iostream>
 #include <exception>
 
 class	RPN {

@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/18 19:45:20 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/18 20:08:32 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/01/18 20:32:51 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,4 +28,33 @@ RPN::~RPN( void ) {}
 
 int	RPN::calculate( const std::string& expression ) {
 
+	std::istringstream	tokens( expression );
+	std::string			token;
+
+	while ( tokens >> token ) {
+		if ( std::isdigit( token[0] ) && token.size() == 1 ) {
+			_stack.push( token[0] - '0' );
+		} else if ( token == "+" || token == "-" || token == "*" || token == "/") {
+			if ( _stack.size() < 2 )
+				throw std::invalid_argument( "Malformed expression." );
+
+			int b = _stack.top(); _stack.pop();
+			int a = _stack.top(); _stack.pop();
+
+			if ( token == "+" ) _stack.push( a + b );
+			else if ( token == "-" ) _stack.push( a - b );
+			else if ( token == "*" ) _stack.push( a * b );
+			else if ( token == "/" ) {
+				if ( b == 0 ) throw std::invalid_argument( "Division by zero." );
+				_stack.push( a / b );
+			}
+		} else {
+			throw std::invalid_argument( "Invalid token in expression." );
+		}
+	}
+
+	if ( _stack.size() != 1 )
+		throw std::invalid_argument( "Malformed expression." );
+
+	return _stack.top();
 }

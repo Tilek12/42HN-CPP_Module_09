@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/19 19:17:03 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/19 19:26:50 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/01/19 20:17:54 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,9 @@
 #include <deque>
 #include <string>
 #include <iostream>
+#include <sstream>
+#include <exception>
+#include <chrono>
 
 class	PmergeMe {
 
@@ -26,13 +29,13 @@ private:
 	std::deque<int>		_dequeData;
 
 	template <typename Container>
-	void	_sortFordJohnson( Container& data );
-
-	template <typename Container>
 	void	_sortPairs( Container& data, Container& pairs );
 
 	template <typename Container>
 	void	_insertLargerElements( Container& sorted, const Container& larger );
+
+	template <typename Container>
+	void	_sortFordJohnson( Container& data );
 
 public:
 
@@ -42,7 +45,7 @@ public:
 	~PmergeMe( void );
 
 	void	parseInput( int argc, char** argv );
-	void	sortAndTime( void );
+	void	sortData( void );
 
 };
 

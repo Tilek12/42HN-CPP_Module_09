@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/19 19:28:41 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/19 20:24:05 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/01/19 21:00:18 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,12 +30,12 @@ PmergeMe&	PmergeMe::operator=( const PmergeMe& other ) {
 PmergeMe::~PmergeMe( void ) {}
 
 template <typename Container>
-void	PmergeMe::_sortPairs( Container& data, Container& pairs ) {
+void	PmergeMe::_sortPairs( Container& data, Container& pairs, Container& larger ) {
 
 	for ( size_t i = 0; i + 1 < data.size(); i += 2 ) {
 		if ( data[i] > data[i + 1] ) {
 			pairs.push_back( data[i + 1] );
-			larger.push_push( data [i] );
+			larger.push_back( data [i] );
 		} else {
 			pairs.push_back( data[i] );
 			larger.push_back( data[i + 1] );
@@ -63,7 +63,7 @@ void	PmergeMe::_sortFordJohnson( Container& data ) {
 	if ( data.size() <= 1 ) return;
 
 	Container pairs, larger;
-	sortPairs( data, pairs );
+	_sortPairs( data, pairs, larger );
 
 	Container sorted = pairs;
 	_insertLargerElements( sorted, larger );
@@ -78,12 +78,14 @@ void	PmergeMe::parseInput( int argc, char** argv ) {
 		std::istringstream	iss( argv[i] );
 
 		if ( !( iss >> value ) || value <= 0 )
-			throw std::invalid_argument( "Error: Invalid input. Only positive integers are allowed to use." );
+			throw std::invalid_argument( "Error: Invalid input. \
+				Only positive integers are allowed to use." );
 
 		_vectorData.push_back( value );
 		_dequeData.push_back( value );
 	}
 
+	std::cout << "\n------------------------------------\n\n";
 	std::cout << "Before: ";
 	for ( int i = 1; i < argc; i++ )
 		std::cout << argv[i] << " ";
@@ -105,12 +107,16 @@ void	PmergeMe::sortData( void ) {
 	end = std::chrono::high_resolution_clock::now();
 	dequeTime = std::chrono::duration<double, std::micro>(end - start).count();
 
+	std::cout << "\n------------------------------------\n\n";
 	std::cout << "After: ";
 	for ( const auto& num : _vectorData ) std::cout << num << " ";
 	std::cout << std::endl;
 
+	std::cout << "\n------------------------------------\n\n";
 	std::cout << "Time to process a range of " << _vectorData.size()
 			  << " elements with std::vector: " << vectorTime << " us" << std::endl;
 	std::cout << "Time to process a range of " << _dequeData.size()
 			  << " elements with std::deque: " << dequeTime << " us" << std::endl;
+
+	std::cout << "\n------------------------------------\n\n";
 }

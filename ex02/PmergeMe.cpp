@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/19 19:28:41 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/19 21:00:18 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/01/19 22:35:29 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,22 +30,22 @@ PmergeMe&	PmergeMe::operator=( const PmergeMe& other ) {
 PmergeMe::~PmergeMe( void ) {}
 
 template <typename Container>
-void	PmergeMe::_sortPairs( Container& data, Container& pairs, Container& larger ) {
+void	PmergeMe::_sortPairs( Container& data, Container& smaller, Container& larger ) {
 
 	for ( size_t i = 0; i + 1 < data.size(); i += 2 ) {
 		if ( data[i] > data[i + 1] ) {
-			pairs.push_back( data[i + 1] );
+			smaller.push_back( data[i + 1] );
 			larger.push_back( data [i] );
 		} else {
-			pairs.push_back( data[i] );
+			smaller.push_back( data[i] );
 			larger.push_back( data[i + 1] );
 		}
 	}
 
 	if ( data.size() % 2 != 0 )
-		pairs.push_back( data.back() );
+		smaller.push_back( data.back() );
 
-	std::sort( pairs.begin(), pairs.end() );
+	std::sort( smaller.begin(), smaller.end() );
 }
 
 template <typename Container>
@@ -62,10 +62,10 @@ void	PmergeMe::_sortFordJohnson( Container& data ) {
 
 	if ( data.size() <= 1 ) return;
 
-	Container pairs, larger;
-	_sortPairs( data, pairs, larger );
+	Container smaller, larger;
+	_sortPairs( data, smaller, larger );
 
-	Container sorted = pairs;
+	Container sorted = smaller;
 	_insertLargerElements( sorted, larger );
 
 	data = sorted;

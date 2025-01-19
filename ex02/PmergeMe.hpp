@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/19 19:17:03 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/19 20:38:34 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/01/19 22:35:42 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ private:
 	std::deque<int>		_dequeData;
 
 	template <typename Container>
-	void	_sortPairs( Container& data, Container& pairs, Container& larger );
+	void	_sortPairs( Container& data, Container& smaller, Container& larger );
 
 	template <typename Container>
 	void	_insertLargerElements( Container& sorted, const Container& larger );

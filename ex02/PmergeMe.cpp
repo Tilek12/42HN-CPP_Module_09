@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/19 19:28:41 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/19 22:35:29 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/01/25 09:05:19 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,6 +81,10 @@ void	PmergeMe::parseInput( int argc, char** argv ) {
 			throw std::invalid_argument( "Error: Invalid input. \
 				Only positive integers are allowed to use." );
 
+		if ( !( iss >> value ) || value > std::numeric_limits<int>::max() )
+			throw std::out_of_range( "Error: Invalid input. \
+				Out of int range number is detected." );
+
 		_vectorData.push_back( value );
 		_dequeData.push_back( value );
 	}
@@ -115,6 +119,7 @@ void	PmergeMe::sortData( void ) {
 	std::cout << "\n------------------------------------\n\n";
 	std::cout << "Time to process a range of " << _vectorData.size()
 			  << " elements with std::vector: " << vectorTime << " us" << std::endl;
+
 	std::cout << "Time to process a range of " << _dequeData.size()
 			  << " elements with std::deque: " << dequeTime << " us" << std::endl;
 

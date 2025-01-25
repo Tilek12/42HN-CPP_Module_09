@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/19 19:17:03 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/19 22:35:42 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/01/25 09:10:59 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,8 @@
 
 #include <vector>
 #include <deque>
+#include <iterator>
+#include <limits>
 #include <string>
 #include <iostream>
 #include <sstream>

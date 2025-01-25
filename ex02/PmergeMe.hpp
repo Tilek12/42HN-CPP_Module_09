@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/19 19:17:03 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/25 09:10:59 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/01/25 12:33:13 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,17 +27,27 @@ class	PmergeMe {
 
 private:
 
+	// template <typename Container>
+	// void	_sortPairs( Container& data, Container& smaller, Container& larger );
+
+	// template <typename Container>
+	// void	_insertLargerElements( Container& sorted, const Container& larger );
+
+	size_t				_comparisonCounter = 0;
 	std::vector<int>	_vectorData;
 	std::deque<int>		_dequeData;
 
-	template <typename Container>
-	void	_sortPairs( Container& data, Container& smaller, Container& larger );
+	size_t							_countPossibleComparisons( size_t numElements ) const;
 
 	template <typename Container>
-	void	_insertLargerElements( Container& sorted, const Container& larger );
+	typename Container::iterator	_nextIterator( typename Container::iterator it, int steps );
 
 	template <typename Container>
-	void	_sortFordJohnson( Container& data );
+	void							_swapPair( typename Container::iterator it, int pairLevel );
+
+	template <typename Container>
+	void							_sortFordJohnson( Container& data, int pairLevel );
+
 
 public:
 

@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/19 19:28:41 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/25 12:34:55 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/01/25 13:09:29 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,22 +62,26 @@ size_t	PmergeMe::_countPossibleComparisons( size_t numElements ) const {
 // }
 
 template <typename Container>
-typename Container::iterator	_nextIterator( typename Container::iterator it, int steps ) {
+typename Container::iterator	PmergeMe::_nextIterator( typename Container::iterator it, int steps ) {
 
 	std::advance( it, steps );
 	return it;
 }
 
 template <typename Container>
-void	_swapPair( typename Container::iterator it, int pairLevel ) {
+void	PmergeMe::_swapPair( typename Container::iterator it, int pairLevel ) {
 
 	auto start = _nextIterator<Container>( it, -pairLevel + 1 );
-	auto end = nextIterator<Container>( start. pairLevel );
+	auto end = _nextIterator<Container>( start. pairLevel );
 
 	while ( start != end ) {
 		std::iter_swap( start, _nextIterator<Container>( start, pairLevel ) );
 		start++;
 	}
+}
+
+long	PmergeMe::_numberJacobsthal( long n ) {
+	return std::round( ( std::pow( 2, n + 1 ) + std::pow( -1, n ) ) / 3 );
 }
 
 template <typename Container>
@@ -91,19 +95,68 @@ void	PmergeMe::_sortFordJohnson( Container& data, int pairLevel ) {
 	bool	isOdd = pairUnits % 2 == 1;
 
 	iterator start = container.begin();
-	iterator end = nextIterator( data, pairLevel * pairUnits - ( isOdd ? pairLevel : 0 ) );
+	iterator end = _nextIterator( data, pairLevel * pairUnits - ( isOdd ? pairLevel : 0 ) );
 
 	for ( iterator it = start; it != end; std::advance( it, 2 * pairLevel ) ) {
-		iterator thisPair = nextIterator( data, pairLevel - 1 );
-		iterator nextPair = nextIterator( data, pairLevel * 2 - 1 );
+		iterator thisPair = _nextIterator( data, pairLevel - 1 );
+		iterator nextPair = _nextIterator( data, pairLevel * 2 - 1 );
 
 		if ( *thisPair > * nextPair ) {
 			_comparisonCounter++;
-			swapPair<Container>( thisPair, pairLevel );
+			_swapPair<Container>( thisPair, pairLevel );
 		}
 	}
 
 	_sortFordJohnson( data, pairLevel * 2 );
+
+	std::vector<iterator>	mainChain;
+	std::vector<iterator>	pending;
+
+	mainChain.push_back( _nextIterator( data, pairLevel -1 ) );
+	mainChain.push_back( _nextIterator( data, pairLevel * 2 -1 ) );
+
+	for ( size_t i = 4; i <= pairUnits; i += 2 ) {
+		pending.push_back( _nextIterator( data, pairLevel * ( i - 1 ) - 1 ) );
+		mainChain.push_back( _nextIterator( data, pairLevel * i - 1 ) );
+	}
+
+	int prevJacobsthalNum = _numberJacobsthal( 1 );
+	int inserted = 0;
+
+	for ( int j = 2;; j++ ) {
+		int currJacobsthalNum = _numberJacobsthal( j );
+		int diff = currJacobsthalNum - prevJacobsthalNum;
+
+		if ( diff > static_cast<int>(pending.size() ) ) break;
+
+		auto bound = mainChain.begin() + currJacobsthalNum + inserted;
+
+		for ( int k = 0; k < diff; k++ ) {
+			auto idx = std::upper_bound( mainChain.begin(), bound, *pending[k], [](auto lhs, auto rhs ) {
+				return *lhs < *rhs;
+			} );
+			mainChain.insert( idx, pending[k] );
+			inserted += diff;
+		}
+
+		prevJacobsthalNum = currJacobsthalNum;
+		inserted += diff;
+	}
+
+	while ( !pending.empty() ) {
+		auto idx = std::upper_bound( mainChain.begin(), mainChain.end(), *pending.back(), []( autolhs, auto rhs ) {
+			return *lhs < *rhs;
+		} );
+
+		mainChain.insert( idx, pending.back() );
+		pending.pop_back();
+		_comparisonCounter++;
+	}
+
+	size_t i = 0;
+	for ( auto it : mainChain )
+		data[i++] = *it;
+
 }
 
 void	PmergeMe::parseInput( int argc, char** argv ) {

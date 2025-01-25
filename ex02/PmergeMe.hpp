@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/19 19:17:03 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/25 12:33:13 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/01/25 13:09:03 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 #include <sstream>
 #include <exception>
 #include <chrono>
+#include <cmath>
 
 class	PmergeMe {
 
@@ -38,6 +39,8 @@ private:
 	std::deque<int>		_dequeData;
 
 	size_t							_countPossibleComparisons( size_t numElements ) const;
+
+	long							_numberJacobsthal( long n );
 
 	template <typename Container>
 	typename Container::iterator	_nextIterator( typename Container::iterator it, int steps );

@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/19 19:17:03 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/25 13:09:03 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/01/28 18:52:41 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,23 +24,31 @@
 #include <chrono>
 #include <cmath>
 
+enum	Prefix {
+	BEFORE,
+	AFTER,
+};
+
 class	PmergeMe {
 
 private:
 
-	// template <typename Container>
-	// void	_sortPairs( Container& data, Container& smaller, Container& larger );
-
-	// template <typename Container>
-	// void	_insertLargerElements( Container& sorted, const Container& larger );
-
-	size_t				_comparisonCounter = 0;
+	size_t				_comparisonCounter;
 	std::vector<int>	_vectorData;
+	double				_vectorTime;
 	std::deque<int>		_dequeData;
+	double				_dequeTime;
 
 	size_t							_countPossibleComparisons( size_t numElements ) const;
 
 	long							_numberJacobsthal( long n );
+
+	template <typename Container>
+	void							_printElements( Container& data );
+
+	void							_printComparisons( void );
+
+	void							_printResult( Prefix prefix );
 
 	template <typename Container>
 	typename Container::iterator	_nextIterator( typename Container::iterator it, int steps );

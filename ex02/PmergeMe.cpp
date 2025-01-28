@@ -6,22 +6,30 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/19 19:28:41 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/25 13:09:29 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/01/28 18:54:04 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "PmergeMe.hpp"
 
-PmergeMe::PmergeMe( void ) {}
+PmergeMe::PmergeMe( void ) : _comparisonCounter( 0 ),
+							 _vectorTime( 0.0 ),
+							 _dequeTime( 0.0 ) {}
 
-PmergeMe::PmergeMe( const PmergeMe& other ) : _vectorData( other._vectorData ),
-											  _dequeData( other._dequeData ) {}
+PmergeMe::PmergeMe( const PmergeMe& other ) : _comparisonCounter( other._comparisonCounter ),
+											  _vectorData( other._vectorData ),
+											  _vectorTime( other._vectorTime ),
+											  _dequeData( other._dequeData ),
+											  _dequeTime( other._dequeTime ) {}
 
 PmergeMe&	PmergeMe::operator=( const PmergeMe& other ) {
 
 	if ( this != &other ) {
+		_comparisonCounter = other._comparisonCounter;
 		_vectorData = other._vectorData;
+		_vectorTime = other._vectorTime;
 		_dequeData = other._dequeData;
+		_dequeTime = other._dequeTime;
 	}
 
 	return *this;
@@ -33,33 +41,56 @@ size_t	PmergeMe::_countPossibleComparisons( size_t numElements ) const {
 	return ( numElements * ( numElements - 1 ) ) / 2;
 }
 
-// template <typename Container>
-// void	PmergeMe::_sortPairs( Container& data, Container& smaller, Container& larger ) {
+long	PmergeMe::_numberJacobsthal( long n ) {
+	return std::round( ( std::pow( 2, n + 1 ) + std::pow( -1, n ) ) / 3 );
+}
 
-// 	for ( size_t i = 0; i + 1 < data.size(); i += 2 ) {
-// 		if ( data[i] > data[i + 1] ) {
-// 			smaller.push_back( data[i + 1] );
-// 			larger.push_back( data [i] );
-// 		} else {
-// 			smaller.push_back( data[i] );
-// 			larger.push_back( data[i + 1] );
-// 		}
-// 	}
+template <typename Container>
+void	PmergeMe::_printElements( Container& data ) {
 
-// 	if ( data.size() % 2 != 0 )
-// 		smaller.push_back( data.back() );
+	for ( const auto& num : data ) std::cout << num << " ";
+	std::cout << std::endl;
+	std::cout << "\n------------------------------------\n\n";
+}
 
-// 	std::sort( smaller.begin(), smaller.end() );
-// }
+void	PmergeMe::_printComparisons( void ) {
 
-// template <typename Container>
-// void	PmergeMe::_insertLargerElements( Container& sorted, const Container& larger ) {
+	std::cout << "\n------------------------------------\n\n";
+	std::cout << "Possible comparisons for " << _vectorData.size()
+			  << " elements: " << _countPossibleComparisons( _vectorData.size() )
+			  << std::endl;
 
-// 	for ( size_t i = 0; i < larger.size(); i++ ) {
-// 		auto pos = std::upper_bound( sorted.begin(), sorted.end(), larger[i] );
-// 		sorted.insert( pos, larger[i] );
-// 	}
-// }
+	std::cout << "Comparisons made: " << _comparisonCounter << std::endl;
+	std::cout << "\n------------------------------------\n\n";
+}
+
+void	PmergeMe::_printResult( Prefix prefix ) {
+
+	switch ( prefix ) {
+
+		case BEFORE:
+			std::cout << "\n------------------------------------\n\n";
+			std::cout << "Before: ";
+			_printElements( _vectorData );
+			break;
+
+		case AFTER:
+			std::cout << "After: ";
+			_printElements( _vectorData );
+			std::cout << "Time to process a range of " << _vectorData.size()
+					  << " elements with std::vector: " << _vectorTime << " us"
+					  << std::endl;
+			std::cout << "Time to process a range of " << _dequeData.size()
+					  << " elements with std::deque: " << _dequeTime << " us"
+					  << std::endl;
+			_printComparisons();
+			break;
+
+		default:
+			std::cerr << "Error: Incorrect prefix";
+			break;
+	}
+}
 
 template <typename Container>
 typename Container::iterator	PmergeMe::_nextIterator( typename Container::iterator it, int steps ) {
@@ -72,7 +103,7 @@ template <typename Container>
 void	PmergeMe::_swapPair( typename Container::iterator it, int pairLevel ) {
 
 	auto start = _nextIterator<Container>( it, -pairLevel + 1 );
-	auto end = _nextIterator<Container>( start. pairLevel );
+	auto end = _nextIterator<Container>( start, pairLevel );
 
 	while ( start != end ) {
 		std::iter_swap( start, _nextIterator<Container>( start, pairLevel ) );
@@ -80,26 +111,33 @@ void	PmergeMe::_swapPair( typename Container::iterator it, int pairLevel ) {
 	}
 }
 
-long	PmergeMe::_numberJacobsthal( long n ) {
-	return std::round( ( std::pow( 2, n + 1 ) + std::pow( -1, n ) ) / 3 );
-}
-
 template <typename Container>
 void	PmergeMe::_sortFordJohnson( Container& data, int pairLevel ) {
 
-	using	iterator = typename Container::iterator;
+//////////////////////////////////////////////////////////////////////
+	std::cout << "Vector Container: ";
+	for ( const auto& num : _vectorData ) std::cout << num << " ";
+	std::cout << std::endl;
 
-	size_t	pairUnits = data.size() / pairlevel;
+	std::cout << "Deque Container: ";
+	for ( const auto& num : _dequeData ) std::cout << num << " ";
+	std::cout << std::endl;
+	std::cout << std::endl;
+//////////////////////////////////////////////////////////////////////
+
+	typedef typename Container::iterator Iterator;
+
+	size_t	pairUnits = data.size() / pairLevel;
 	if ( pairUnits < 2 ) return;
 
 	bool	isOdd = pairUnits % 2 == 1;
 
-	iterator start = container.begin();
-	iterator end = _nextIterator( data, pairLevel * pairUnits - ( isOdd ? pairLevel : 0 ) );
+	Iterator start = data.begin();
+	Iterator end = _nextIterator<Container>( start, pairLevel * pairUnits - ( isOdd ? pairLevel : 0 ) );
 
-	for ( iterator it = start; it != end; std::advance( it, 2 * pairLevel ) ) {
-		iterator thisPair = _nextIterator( data, pairLevel - 1 );
-		iterator nextPair = _nextIterator( data, pairLevel * 2 - 1 );
+	for ( Iterator it = start; it != end; std::advance( it, 2 * pairLevel ) ) {
+		Iterator thisPair = _nextIterator<Container>( it, pairLevel - 1 );
+		Iterator nextPair = _nextIterator<Container>( it, pairLevel * 2 - 1 );
 
 		if ( *thisPair > * nextPair ) {
 			_comparisonCounter++;
@@ -109,15 +147,15 @@ void	PmergeMe::_sortFordJohnson( Container& data, int pairLevel ) {
 
 	_sortFordJohnson( data, pairLevel * 2 );
 
-	std::vector<iterator>	mainChain;
-	std::vector<iterator>	pending;
+	std::vector<Iterator>	mainChain;
+	std::vector<Iterator>	pending;
 
-	mainChain.push_back( _nextIterator( data, pairLevel -1 ) );
-	mainChain.push_back( _nextIterator( data, pairLevel * 2 -1 ) );
+	mainChain.push_back( _nextIterator<Container>( data.begin(), pairLevel -1 ) );
+	mainChain.push_back( _nextIterator<Container>( data.begin(), pairLevel * 2 -1 ) );
 
 	for ( size_t i = 4; i <= pairUnits; i += 2 ) {
-		pending.push_back( _nextIterator( data, pairLevel * ( i - 1 ) - 1 ) );
-		mainChain.push_back( _nextIterator( data, pairLevel * i - 1 ) );
+		pending.push_back( _nextIterator<Container>( data.begin(), pairLevel * ( i - 1 ) - 1 ) );
+		mainChain.push_back( _nextIterator<Container>( data.begin(), pairLevel * i - 1 ) );
 	}
 
 	int prevJacobsthalNum = _numberJacobsthal( 1 );
@@ -132,7 +170,7 @@ void	PmergeMe::_sortFordJohnson( Container& data, int pairLevel ) {
 		auto bound = mainChain.begin() + currJacobsthalNum + inserted;
 
 		for ( int k = 0; k < diff; k++ ) {
-			auto idx = std::upper_bound( mainChain.begin(), bound, *pending[k], [](auto lhs, auto rhs ) {
+			auto idx = std::upper_bound( mainChain.begin(), bound, pending[k], []( Iterator lhs, Iterator rhs ) {
 				return *lhs < *rhs;
 			} );
 			mainChain.insert( idx, pending[k] );
@@ -144,7 +182,7 @@ void	PmergeMe::_sortFordJohnson( Container& data, int pairLevel ) {
 	}
 
 	while ( !pending.empty() ) {
-		auto idx = std::upper_bound( mainChain.begin(), mainChain.end(), *pending.back(), []( autolhs, auto rhs ) {
+		auto idx = std::upper_bound( mainChain.begin(), mainChain.end(), pending.back(), []( Iterator lhs, Iterator rhs ) {
 			return *lhs < *rhs;
 		} );
 
@@ -153,9 +191,21 @@ void	PmergeMe::_sortFordJohnson( Container& data, int pairLevel ) {
 		_comparisonCounter++;
 	}
 
-	size_t i = 0;
-	for ( auto it : mainChain )
-		data[i++] = *it;
+	// size_t i = 0;
+	// for ( auto it : mainChain )
+	// 	data[i++] = *it;
+
+	std::vector<int> copy;
+	copy.reserve( data.size() );
+	for ( auto it : mainChain ) {
+		for ( int i = 0; i < pairLevel; i++ ) {
+			Iterator pairStart = it;
+			std::advance( pairStart, -pairLevel + i + 1 );
+			copy.push_back( *pairStart );
+		}
+	}
+
+	std::copy( copy.begin(), copy.end(), data.begin() );
 
 }
 
@@ -169,47 +219,28 @@ void	PmergeMe::parseInput( int argc, char** argv ) {
 			throw std::invalid_argument( "Error: Invalid input. \
 				Only positive integers are allowed to use." );
 
-		if ( !( iss >> value ) || value > std::numeric_limits<int>::max() )
-			throw std::out_of_range( "Error: Invalid input. \
-				Out of int range number is detected." );
+		// if ( !( iss >> value ) || value > std::numeric_limits<int>::max() )
+		// 	throw std::out_of_range( "Error: Invalid input. \
+		// 		Out of int range number is detected." );
 
 		_vectorData.push_back( value );
 		_dequeData.push_back( value );
 	}
-
-	std::cout << "\n------------------------------------\n\n";
-	std::cout << "Before: ";
-	for ( int i = 1; i < argc; i++ )
-		std::cout << argv[i] << " ";
-	std::cout << std::endl;
 }
 
 void	PmergeMe::sortData( void ) {
 
-	double	vectorTime;
-	double	dequeTime;
+	_printResult( BEFORE );
 
 	auto start = std::chrono::high_resolution_clock::now();
 	_sortFordJohnson( _vectorData, 1 );
 	auto end = std::chrono::high_resolution_clock::now();
-	vectorTime = std::chrono::duration<double, std::micro>(end - start).count();
+	_vectorTime = std::chrono::duration<double, std::micro>(end - start).count();
 
 	start = std::chrono::high_resolution_clock::now();
 	_sortFordJohnson( _dequeData, 1 );
 	end = std::chrono::high_resolution_clock::now();
-	dequeTime = std::chrono::duration<double, std::micro>(end - start).count();
+	_dequeTime = std::chrono::duration<double, std::micro>(end - start).count();
 
-	std::cout << "\n------------------------------------\n\n";
-	std::cout << "After: ";
-	for ( const auto& num : _vectorData ) std::cout << num << " ";
-	std::cout << std::endl;
-
-	std::cout << "\n------------------------------------\n\n";
-	std::cout << "Time to process a range of " << _vectorData.size()
-			  << " elements with std::vector: " << vectorTime << " us" << std::endl;
-
-	std::cout << "Time to process a range of " << _dequeData.size()
-			  << " elements with std::deque: " << dequeTime << " us" << std::endl;
-
-	std::cout << "\n------------------------------------\n\n";
+	_printResult( AFTER );
 }

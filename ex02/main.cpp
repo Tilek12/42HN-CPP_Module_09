@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/19 20:27:30 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/28 18:49:29 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/01/29 17:33:41 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 int	main( int argc, char** argv ) {
 
 	if ( argc < 2 ) {
-		std::cerr << "Error: No input provided." << std::endl << std::endl
+		std::cerr << "Error: No input provided." << std::endl
 				  << "Usage: " << argv[0] << " <numbers to sort>" << std::endl;
 		return 1;
 	}

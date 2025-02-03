@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/19 19:28:41 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/02/01 19:22:28 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/02/03 21:48:03 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ size_t	PmergeMe::_countMinComparisons( size_t n ) const {
 	return static_cast<size_t>( std::ceil( result ) );
 }
 
-long	PmergeMe::_numberJacobsthal( long n ) {
+size_t	PmergeMe::_jacobsthal( size_t n ) {
 	return std::round( ( std::pow( 2, n + 1 ) + std::pow( -1, n ) ) / 3 );
 }
 
@@ -86,9 +86,9 @@ void	PmergeMe::_printResult( Prefix prefix ) const {
 			std::cout << "Time to process a range of " << _vectorData.size()
 					  << " elements with std::vector: " << _vectorTime << " us"
 					  << std::endl;
-			std::cout << "Time to process a range of " << _dequeData.size()
-					  << " elements with std::deque: " << _dequeTime << " us"
-					  << std::endl;
+			// std::cout << "Time to process a range of " << _dequeData.size()
+			// 		  << " elements with std::deque: " << _dequeTime << " us"
+			// 		  << std::endl;
 			_printComparisons();
 			break;
 
@@ -99,12 +99,12 @@ void	PmergeMe::_printResult( Prefix prefix ) const {
 }
 
 template <typename Container>
-void	PmergeMe::_swapPair( typename Container::iterator it, int pairLevel ) {
-	auto start = std::next( it, -pairLevel + 1 );
-	auto end = std::next( start, pairLevel );
+void	PmergeMe::_swapPair( typename Container::iterator it, size_t elementSize ) {
+	auto start = std::next( it, -elementSize + 1 );
+	auto end = std::next( start, elementSize );
 
 	while ( start != end ) {
-		std::iter_swap( start, std::next( start, pairLevel ) );
+		std::iter_swap( start, std::next( start, elementSize ) );
 		start++;
 	}
 }
@@ -114,328 +114,259 @@ bool	PmergeMe::_compare( Iter left, Iter right ) {
 	return *left < *right;
 }
 
+// void	PmergeMe::calculateNextJacobsthal(size_t& currJacobsthal, size_t& prevJacobsthal) {
+
+// 	size_t nextJacobsthal = currJacobsthal + 2 * prevJacobsthal;
+// 	prevJacobsthal = currJacobsthal;
+// 	currJacobsthal = nextJacobsthal;
+// 	// std::cout << "--- prevJacobsthal = " << prevJacobsthal << std::endl;
+// 	std::cout << "--- currJacobsthal = " << currJacobsthal << std::endl;
+// }
+
+// Template function to perform binary search and insert an element into the correct position
 template <typename Container>
-void PmergeMe::_insertion(Container& data, typename Container::iterator end,
-                          int pairLevel, size_t elementsNum) {
-    using Iterator = typename Container::iterator;
+void	PmergeMe::_binarySearchInsert( Container& dst, const Container& src,
+									typename Container::const_iterator srcIt, size_t elementSize ) {
 
-    // Helper function for binary search to find the insertion position
-    auto binarySearchInsertPosition = [this](Container& chain, const typename Container::value_type& target, Iterator bound) -> Iterator {
-        auto low = chain.begin();
-        auto high = bound;
+	// Ensure srcIt is within the bounds of src
+	if ( srcIt < src.begin() || srcIt + elementSize > src.end() ) {
+		std::cerr << "Error: srcIt is out of bounds!" << std::endl;
+		return;
+	}
 
-        while (low < high) {
-            auto mid = low + (high - low) / 2;
-            _comparisonCounter++; // Increment only for essential comparisons
-            if (this->_compare(*mid, target)) { // Compare values, not iterators
-                low = mid + 1;
-            } else {
-                high = mid;
-            }
-        }
-        return low;
-    };
+	// Calculate the value of the element to insert
+	int insertValue = *(srcIt + elementSize - 1);
 
-    // Step 1: Build the main chain and pending elements
-    Container mainChain; // Use the template container directly
-    Container pending;   // Use the template container directly
+	// Calculate the start and end iterators for the element to insert
+	auto srcStart = srcIt; // Start of the element in src
+	auto srcEnd = srcStart + elementSize; // End of the element in src (one past the last)
 
-    // Add the first two elements to the main chain
-    mainChain.push_back(*std::next(data.begin(), pairLevel - 1));
-    mainChain.push_back(*std::next(data.begin(), pairLevel * 2 - 1));
+	// Perform binary search to find the correct position in the destination container
+	int low = 0;
+	int high = ( dst.size() / elementSize ) - 1;
 
-    // Add remaining elements to pending
-    for (size_t i = 4; i <= elementsNum; i += 2) {
-        pending.push_back(*std::next(data.begin(), pairLevel * (i - 1) - 1));
-        mainChain.push_back(*std::next(data.begin(), pairLevel * i - 1));
-    }
+	while ( low <= high ) {
+		int mid = low + (high - low) / 2;
+		int dstElemIndex = mid * elementSize + (elementSize - 1);
+		int dstElemValue = dst[dstElemIndex];
 
-    // Step 2: Insert elements using Jacobsthal numbers
-    int prevJacobsthalNum = _numberJacobsthal(1);
-    int insertedNums = 0;
+		if ( dstElemValue < insertValue )
+			low = mid + 1;
+		else
+			high = mid - 1;
+	}
 
-    for (int i = 2; ; i++) {
-        int currJacobsthalNum = _numberJacobsthal(i);
-        int diffJacobsthalNum = currJacobsthalNum - prevJacobsthalNum;
+	// Calculate the position to insert the new element
+	int insertPosition = low * elementSize;
 
-        // Stop if no more elements to insert
-        if (diffJacobsthalNum > static_cast<int>(pending.size())) break;
-
-        // Insert elements in the current Jacobsthal range
-        auto pendingIt = pending.begin() + (diffJacobsthalNum - 1);
-        auto boundIt = mainChain.begin() + (currJacobsthalNum + insertedNums);
-
-        for (int j = 0; j < diffJacobsthalNum; j++) {
-            // Find the insertion position using the helper function
-            auto insertPos = binarySearchInsertPosition(mainChain, *pendingIt, boundIt);
-
-            // Insert the element into the main chain
-            mainChain.insert(insertPos, *pendingIt);
-            pendingIt = pending.erase(pendingIt) - 1; // Move back after erasing
-        }
-
-        prevJacobsthalNum = currJacobsthalNum;
-        insertedNums += diffJacobsthalNum;
-    }
-
-    // Step 3: Insert any remaining pending elements
-    for (auto& pendingElem : pending) {
-        // Find the insertion position using the helper function
-        auto insertPos = binarySearchInsertPosition(mainChain, pendingElem, mainChain.end());
-
-        // Insert the element into the main chain
-        mainChain.insert(insertPos, pendingElem);
-    }
-
-    // Step 4: Handle the odd element if present
-    if (elementsNum % 2 == 1) {
-        auto oddPair = *std::next(end, pairLevel - 1);
-
-        // Find the insertion position using the helper function
-        auto insertPos = binarySearchInsertPosition(mainChain, oddPair, mainChain.end());
-
-        // Insert the odd element into the main chain
-        mainChain.insert(insertPos, oddPair);
-    }
-
-    // Step 5: Reconstruct the sorted data from the main chain
-    Container sortedData; // Use the template container directly
-
-    for (auto& chainElem : mainChain) {
-        for (int i = 0; i < pairLevel; i++) {
-            auto pairStart = chainElem;
-            sortedData.push_back(pairStart);
-        }
-    }
-
-    // Step 6: Copy the sorted data back to the original container
-    std::copy(sortedData.begin(), sortedData.end(), data.begin());
+	// Insert the element into the container
+	dst.insert( dst.begin() + insertPosition, srcStart, srcEnd );
 }
 
-// template <typename Container>
-// void PmergeMe::_insertion(Container& data, typename Container::iterator end,
-//                           int pairLevel, size_t elementsNum) {
+template <typename Container>
+void	PmergeMe::_insertion( Container& data, typename Container::iterator end,
+								size_t elementSize, size_t elementsNum ) {
 
-// 	using Iterator = typename Container::iterator;
+	if ( elementsNum <= 2 )
+		return;
 
-//     // Step 1: Build the main chain and pending elements
-//     std::vector<Iterator> mainChain;
-//     std::vector<Iterator> pending;
+	using Iterator = typename Container::iterator;
 
-//     // Add the first two elements to the main chain
-//     mainChain.push_back(std::next(data.begin(), pairLevel - 1));
-//     mainChain.push_back(std::next(data.begin(), pairLevel * 2 - 1));
+	// Define temporary containers
+	Container	mainChain;
+	Container	largerElements;
+	Container	smallerElements;
 
-//     // Add remaining elements to pending
-//     for (size_t i = 4; i <= elementsNum; i += 2) {
-//         pending.push_back(std::next(data.begin(), pairLevel * (i - 1) - 1));
-//         mainChain.push_back(std::next(data.begin(), pairLevel * i - 1));
-//     }
 
-//     // Step 2: Insert elements using Jacobsthal numbers
-//     int prevJacobsthalNum = _numberJacobsthal(1);
-//     int insertedNums = 0;
+	Iterator it = data.begin();
+	for ( size_t i = 0; i < elementsNum / 2; i++ ) {
+		// Define the start and end of the current pair
+		Iterator firstElementStart = it;
+		Iterator firstElementEnd = std::next( it, elementSize );
+		Iterator secondElementStart = firstElementEnd;
+		Iterator secondElementEnd = std::next( secondElementStart, elementSize );
 
-//     for (int i = 2; ; i++) {
-//         int currJacobsthalNum = _numberJacobsthal(i);
-//         int diffJacobsthalNum = currJacobsthalNum - prevJacobsthalNum;
+		// Compare the last element of the first pair with the last element of the second pair
+		auto firstLast = std::prev(firstElementEnd);
+		auto secondLast = std::prev(secondElementEnd);
 
-//         // Stop if no more elements to insert
-//         if (diffJacobsthalNum > static_cast<int>(pending.size())) break;
+		// The larger element goes to the main chain
+		if ( *firstLast > *secondLast ) {
+			largerElements.insert( largerElements.end(), firstElementStart, firstElementEnd );
+			smallerElements.insert( smallerElements.end(), secondElementStart, secondElementEnd );
+		} else {
+			largerElements.insert( largerElements.end(), secondElementStart, secondElementEnd );
+			smallerElements.insert( smallerElements.end(), firstElementStart, firstElementEnd );
+		}
 
-//         // Insert elements in the current Jacobsthal range
-//         auto pendingIt = pending.begin() + (diffJacobsthalNum - 1);
-//         auto boundIt = mainChain.begin() + (currJacobsthalNum + insertedNums);
+		// Move to the next pair
+		it = secondElementEnd;
+	}
 
-//         for (int j = 0; j < diffJacobsthalNum; j++) {
-//             // Find the insertion position using a custom binary search
-//             auto insertPos = mainChain.begin();
-//             auto low = mainChain.begin();
-//             auto high = boundIt;
+	// Put the last unpaired element to smallerElements sequens
+	if ( elementsNum % 2 == 1 ) {
+		smallerElements.insert( smallerElements.end(), end, std::next( end, elementSize ) );
+	}
 
-//             while (low < high) {
-//                 auto mid = low + (high - low) / 2;
-//                 _comparisonCounter++;
-//                 if (_compare(*pendingIt, *mid)) {
-//                     high = mid;
-//                 } else {
-//                     low = mid + 1;
-//                 }
-//             }
-//             insertPos = low;
+	// Build the initial mainChain
+	if ( !smallerElements.empty() )
+		mainChain.insert( mainChain.end(), smallerElements.begin(), std::next( smallerElements.begin(), elementSize) );
 
-//             // Insert the element into the main chain
-//             mainChain.insert(insertPos, *pendingIt);
-//             pendingIt = pending.erase(pendingIt) - 1; // Move back after erasing
-//         }
+	if ( !largerElements.empty() )
+		mainChain.insert( mainChain.end(), largerElements.begin(), std::next( largerElements.begin(), elementSize));
 
-//         prevJacobsthalNum = currJacobsthalNum;
-//         insertedNums += diffJacobsthalNum;
-//     }
+	if ( largerElements.size() > elementSize )
+		mainChain.insert( mainChain.end(), std::next( largerElements.begin(), elementSize ), std::next( largerElements.begin(), 2 * elementSize ) );
 
-//     // Step 3: Insert any remaining pending elements
-//     for (auto& pendingElem : pending) {
-//         // Find the insertion position using a custom binary search
-//         auto insertPos = mainChain.begin();
-//         auto low = mainChain.begin();
-//         auto high = mainChain.end();
+	Iterator smallElemPos = smallerElements.begin() + elementSize;
 
-//         while (low < high) {
-//             auto mid = low + (high - low) / 2;
-//             _comparisonCounter++;
-//             if (_compare(pendingElem, *mid)) {
-//                 high = mid;
-//             } else {
-//                 low = mid + 1;
-//             }
-//         }
-//         insertPos = low;
+	_binarySearchInsert( mainChain, smallerElements, smallElemPos, elementSize );
 
-//         // Insert the element into the main chain
-//         mainChain.insert(insertPos, pendingElem);
-//     }
+    // // Insert elements from smallerElements into mainChain using Jacobsthal numbers
+    // size_t currJacobsthal = 3;
+    // size_t prevJacobsthal = 1;
+    // size_t elementsToInsert = 1;
+    // Iterator smallElemPosToInsert = smallerElements.begin() + elementSize;
+    // Iterator largeElemPosToInsert = mainChain.begin() + elementSize;
 
-//     // Step 4: Handle the odd element if present
-//     if (elementsNum % 2 == 1) {
-//         auto oddPair = std::next(end, pairLevel - 1);
+    // while (true) {
+    //     if (currJacobsthal <= smallerElements.size() / elementSize) {
+    //         elementsToInsert = currJacobsthal - prevJacobsthal;
+    //         smallElemPosToInsert = smallerElements.begin() + (currJacobsthal * elementSize);
 
-//         // Find the insertion position using a custom binary search
-//         auto insertPos = mainChain.begin();
-//         auto low = mainChain.begin();
-//         auto high = mainChain.end();
+    //         for (size_t i = 0; i < elementsToInsert; i++) {
+    //             smallElemPosToInsert -= elementSize;
+    //             binaryInsertToMainChain(smallElemPosToInsert, mainChain, elementSize);
+    //         }
 
-//         while (low < high) {
-//             auto mid = low + (high - low) / 2;
-//             _comparisonCounter++;
-//             if (_compare(oddPair, *mid)) {
-//                 high = mid;
-//             } else {
-//                 low = mid + 1;
-//             }
-//         }
-//         insertPos = low;
+    //         if (largerElements.size() > (largeElemPosToInsert - mainChain.begin()) / elementSize) {
+    //             for (size_t i = 0; i < elementsToInsert; i++) {
+    //                 largeElemPosToInsert += elementSize;
+    //                 binaryInsertToMainChain(largeElemPosToInsert, mainChain, elementSize);
+    //                 if (largeElemPosToInsert == largerElements.end())
+    //                     break;
+    //             }
+    //         }
 
-//         // Insert the odd element into the main chain
-//         mainChain.insert(insertPos, oddPair);
-//     }
+	// 		calculateNextJacobsthal(currJacobsthal, prevJacobsthal);
+    //     } else {
+    //         smallElemPosToInsert += elementSize;
+    //         binaryInsertToMainChain(smallElemPosToInsert, mainChain, elementSize);
 
-//     // Step 5: Reconstruct the sorted data from the main chain
-//     std::vector<int> sortedData;
-//     sortedData.reserve(data.size());
+    //         if (largerElements.size() > (largeElemPosToInsert - mainChain.begin()) / elementSize) {
+    //             largeElemPosToInsert += elementSize;
+    //             binaryInsertToMainChain(largeElemPosToInsert, mainChain, elementSize);
+    //         }
+    //     }
 
-//     for (auto& chainElem : mainChain) {
-//         for (int i = 0; i < pairLevel; i++) {
-//             Iterator pairStart = chainElem;
-//             std::advance(pairStart, -pairLevel + i + 1);
-//             sortedData.push_back(*pairStart);
-//         }
-//     }
+    //     if (smallElemPosToInsert >= smallerElements.end())
+    //         break;
 
-//     // Step 6: Copy the sorted data back to the original container
-//     std::copy(sortedData.begin(), sortedData.end(), data.begin());
-// }
+    //     elementsToInsert = 1;
+    // }
 
-// template <typename Container>
-// void PmergeMe::_insertion( Container& data, typename Container::iterator end,
-// 							bool isOdd, int pairLevel, size_t elementsNum ) {
+	// // Copy the sorted mainChain back to the original data
+	// std::copy( mainChain.begin(), mainChain.end(), data.begin() );
 
-// 	using Iterator = typename Container::iterator;
 
-// 	// Helper function to perform binary search and find the insertion position
-// 	auto binarySearchInsertPosition = [this](const std::vector<Iterator>& chain, Iterator target, typename std::vector<Iterator>::const_iterator bound) -> typename std::vector<Iterator>::const_iterator {
-// 		typename std::vector<Iterator>::const_iterator low = chain.begin();
-// 		typename std::vector<Iterator>::const_iterator high = bound;
 
-// 		while (low < high) {
-// 			typename std::vector<Iterator>::const_iterator mid = low + (high - low) / 2;
-// 			_comparisonCounter++;
-// 			if ( _compare( target, *mid ) )
-// 				high = mid;
-// 			else
-// 				low = mid + 1;
-// 		}
-// 		return low;
-// 	};
 
-// 	// Step 1: Build the main chain and pending elements
-// 	std::vector<Iterator> mainChain;
-// 	std::vector<Iterator> pending;
+/////// START OF PSEUDOCODE OF INSERTIONS PART ///////
 
-// 	// Add the first two elements to the main chain
-// 	mainChain.push_back( std::next( data.begin(), pairLevel - 1 ) );
-// 	mainChain.push_back( std::next( data.begin(), pairLevel * 2 - 1 ) );
+	// Insert elements from smallerElements into mainChain using Jacobsthal numbers
 
-// 	// Add remaining elements to pending
-// 	for ( size_t i = 4; i <= elementsNum; i += 2 ) {
-// 		pending.push_back( std::next( data.begin(), pairLevel * ( i - 1 ) - 1 ) );
-// 		mainChain.push_back( std::next( data.begin(), pairLevel * i - 1 ) );
-// 	}
+	// size_t currJacobsthal = 3;
+	// size_t prevJacobsthal = 1;
+	// size_t elementsToInsert = 1;
+	// Iterator smallElemPosToInsert = 1;
+	// Iterator largeElemPosToInsert = mainChain.size() - 1;
 
-// 	// Step 2: Insert elements using Jacobsthal numbers
-// 	int prevJacobsthalNum = _numberJacobsthal( 1 );
-// 	int insertedNums = 0;
+	// while ( true ) {
 
-// 	for ( int i = 2; ; i++ ) {
-// 		int currJacobsthalNum = _numberJacobsthal( i );
-// 		int diffJacobsthalNum = currJacobsthalNum - prevJacobsthalNum;
+	// 	if ( currJacobsthal <= smallerElements.size() ) {
+	// 		elementsToInsert = currJacobsthal - prevJacobsthal;
+	// 		smallElemPosToInsert = currJacobsthal;
 
-// 		// Stop if no more elements to insert
-// 		if ( diffJacobsthalNum > static_cast<int>( pending.size() ) ) break;
+	// 		for ( size_t i = elementsToInsert; i > 0; i-- ) {
+	// 			binaryInsertToMainChain( smallElemPosToInsert, mainChain, startPointInMainChain, endPointInMainChain );
+	// 			smallElemPosToInsert--;
+	// 		}
+	// 		if ( largerElements.size() > largeElemPosToInsert ) {
+	// 			for ( size_t i = 0; i <= elementsToInsert; i++ ) {
+	// 				largeElemPosToInsert++;
+	// 				binaryInsertToMainChain( largeElemPosToInsert, mainChain, startPointInMainChain, endPointInMainChain );
+	// 				if ( largeElemPosToInsert == largerElements.size() )
+	// 					break;
+	// 			}
+	// 		}
+	// 	} else {
+	// 		smallElemPosToInsert++;
+	// 		binaryInsertToMainChain( smallElemPosToInsert, mainChain, startPointInMainChain, endPointInMainChain );
+	// 		if ( largerElements.size() > largeElemPosToInsert ) {
+	// 			largeElemPosToInsert++;
+	// 			binaryInsertToMainChain( largeElemPosToInsert, mainChain, startPointInMainChain, endPointInMainChain );
+	// 		}
 
-// 		// Insert elements in the current Jacobsthal range
-// 		auto pendingIt = pending.begin() + ( diffJacobsthalNum - 1 );
-// 		auto boundIt = mainChain.begin() + ( currJacobsthalNum + insertedNums );
+	// 	}
 
-// 		for ( int j = 0; j < diffJacobsthalNum; j++ ) {
-// 			auto insertPos = binarySearchInsertPosition(mainChain, *pendingIt, boundIt);
-// 			mainChain.insert( insertPos, *pendingIt );
-// 			pendingIt = pending.erase( pendingIt ) - 1; // Move back after erasing
-// 		}
+	// 	if ( smallElemPosToInsert == smallerElements.size() )
+	// 		break;
 
-// 		prevJacobsthalNum = currJacobsthalNum;
-// 		insertedNums += diffJacobsthalNum;
-// 	}
+	// 	elementsToInsert = 1;
+	// 	prevJacobsthal = currJacobsthal;
+	// 	currJacobsthal = calculateNextJacobsthal();
 
-// 	// Step 3: Insert any remaining pending elements
-// 	for ( auto& pendingElem : pending ) {
-// 		auto insertPos = binarySearchInsertPosition( mainChain, pendingElem, mainChain.end() );
-// 		mainChain.insert( insertPos, pendingElem );
-// 	}
+	// }
 
-// 	// Step 4: Handle the odd element if present
-// 	if ( isOdd ) {
-// 		auto oddPair = std::next( end, pairLevel - 1 );
-// 		auto insertPos = binarySearchInsertPosition( mainChain, oddPair, mainChain.end() );
-// 		mainChain.insert( insertPos, oddPair );
-// 	}
+	// std::copy( sortedData.begin(), sortedData.end(), data.begin() );
 
-// 	// Step 5: Reconstruct the sorted data from the main chain
-// 	std::vector<int> sortedData;
-// 	sortedData.reserve( data.size() );
+/////// END OF PSEUDOCODE OF INSERTIONS PART ///////
 
-// 	for ( auto& chainElem : mainChain ) {
-// 		for ( int i = 0; i < pairLevel; i++ ) {
-// 			Iterator pairStart = chainElem;
-// 			std::advance( pairStart, -pairLevel + i + 1 );
-// 			sortedData.push_back( *pairStart );
-// 		}
-// 	}
+//////////////////////////////////////////////////////////////////////
+	std::cout << "mainChain " << elementSize << "\t : ";
+	size_t counter = 0;
+	for ( const auto& num : mainChain ) {
+		counter++;
+		std::cout << num << " ";
+		if ( counter % elementSize == 0 )
+			std::cout << "- ";
+	}
+	std::cout << std::endl;
 
-// 	// Step 6: Copy the sorted data back to the original container
-// 	std::copy( sortedData.begin(), sortedData.end(), data.begin() );
-// }
+	std::cout << "largerElements " << elementSize << " : ";
+	counter = 0;
+	for ( const auto& num : largerElements ) {
+		counter++;
+		std::cout << num << " ";
+		if ( counter % elementSize == 0 )
+			std::cout << "- ";
+	}
+	std::cout << std::endl;
+
+	std::cout << "smallerElements " << elementSize << ": ";
+	counter = 0;
+	for ( const auto& num : smallerElements ) {
+		counter++;
+		std::cout << num << " ";
+		if ( counter % elementSize == 0 )
+			std::cout << "- ";
+	}
+	std::cout << std::endl << std::endl;
+//////////////////////////////////////////////////////////////////////
+
+}
 
 template <typename Container>
 void PmergeMe::_sortPairs( typename Container::iterator start,
-						typename Container::iterator end, int pairLevel ) {
+						typename Container::iterator end, size_t elementSize ) {
 
 	// Iterate through the container in steps of 2 * pairLevel
-	for ( auto it = start; it != end; std::advance( it, 2 * pairLevel ) ) {
+	for ( auto it = start; it != end; std::advance( it, 2 * elementSize ) ) {
 		// Define the range of the current pair
 		auto firstPairStart = it;
-		auto firstPairEnd = std::next( it, pairLevel );
+		auto firstPairEnd = std::next( it, elementSize );
 		auto secondPairStart = firstPairEnd;
-		auto secondPairEnd = std::next( secondPairStart, pairLevel );
+		auto secondPairEnd = std::next( secondPairStart, elementSize );
 
 		// Ensure the second pair is within bounds
 		if ( secondPairStart >= end || secondPairEnd > end )
@@ -450,7 +381,7 @@ void PmergeMe::_sortPairs( typename Container::iterator start,
 
 		if ( *firstPairLast > *secondPairLast ) {
 			// Swap the two pairs
-			for ( int i = 0; i < pairLevel; ++i ) {
+			for ( size_t i = 0; i < elementSize; ++i ) {
 				std::iter_swap( firstPairStart, secondPairStart );
 				firstPairStart++;
 				secondPairStart++;
@@ -460,146 +391,47 @@ void PmergeMe::_sortPairs( typename Container::iterator start,
 }
 
 template <typename Container>
-void	PmergeMe::_sortFordJohnson( Container& data, int pairLevel ) {
+void	PmergeMe::_sortFordJohnson( Container& data, size_t elementSize ) {
 
 	using Iterator = typename Container::iterator;
 
-	size_t elementsNum = data.size() / pairLevel;
-	if (elementsNum < 2) return;
+	size_t elementsNum = data.size() / elementSize;
+	if ( elementsNum < 2 ) return;
 
 //////////////////////////////////////////////////////////////////////
-	std::cout << "Before in pair level " << pairLevel << ": ";
-	for ( const auto& num : data ) std::cout << num << " ";
-	std::cout << std::endl;
+	std::cout << "Before " << elementSize << ": ";
+	size_t counter = 0;
+	for ( const auto& num : data ) {
+		counter++;
+		std::cout << num << " ";
+		if ( counter % ( elementSize * 2 ) == 0 )
+			std::cout << "|| ";
+	}
+	std::cout << std::endl << std::endl;
 //////////////////////////////////////////////////////////////////////
 
 	bool isOdd = elementsNum % 2 == 1;
 	Iterator start = data.begin();
-	Iterator last = std::next(data.begin(), pairLevel * elementsNum);
-	Iterator end = std::next(last, -(isOdd * pairLevel));
+	Iterator last = std::next( data.begin(), elementSize * elementsNum );
+	Iterator end = std::next( last, -(isOdd * elementSize ) );
 
-	this->_sortPairs<Container>( start, end, pairLevel );
-	_sortFordJohnson( data, pairLevel * 2 );
-	_insertion( data, end, pairLevel, elementsNum );
+	this->_sortPairs<Container>( start, end, elementSize );
+	_sortFordJohnson( data, elementSize * 2 );
+	_insertion( data, end, elementSize, elementsNum );
 
 //////////////////////////////////////////////////////////////////////
-	// std::cout << "After in pair level " << pairLevel << " : ";
-	// for ( const auto& num : data ) std::cout << num << " ";
-	// std::cout << std::endl;
+	std::cout << "After " << elementSize << " : ";
+	counter = 0;
+	for ( const auto& num : data ) {
+		counter++;
+		std::cout << num << " ";
+		if ( counter % (elementSize * 2) == 0 )
+			std::cout << "|| ";
+	}
+	std::cout << std::endl << std::endl;
 //////////////////////////////////////////////////////////////////////
+
 }
-
-// template <typename Container>
-// void	PmergeMe::_sortFordJohnson( Container& data, int pairLevel ) {
-
-// 	using Iterator = typename Container::iterator;
-
-// 	size_t	elementsNum = data.size() / pairLevel;
-// 	if ( elementsNum < 2 ) return;
-
-// 	bool	isOdd = elementsNum % 2 == 1;
-
-// 	Iterator start = data.begin();
-// 	Iterator last = std::next( data.begin(), pairLevel * elementsNum );
-// 	Iterator end = std::next( last, -( isOdd * pairLevel ) );
-
-// 	for ( Iterator it = start; it != end; std::advance( it, 2 * pairLevel ) ) {
-// 		Iterator thisPair = std::next( it, pairLevel - 1 );
-// 		Iterator nextPair = std::next( it, pairLevel * 2 - 1 );
-
-// 		if ( *thisPair > *nextPair ) {
-// 			_comparisonCounter++;
-// 			_swapPair<Container>( thisPair, pairLevel );
-// 		}
-// 	}
-
-// 	_sortFordJohnson( data, pairLevel * 2 );
-
-// 	std::vector<Iterator>	mainChain;
-// 	std::vector<Iterator>	pending;
-
-// 	mainChain.push_back( std::next( data.begin(), pairLevel -1 ) );
-// 	mainChain.push_back( std::next( data.begin(), pairLevel * 2 - 1 ) );
-
-// 	for ( size_t i = 4; i <= elementsNum; i += 2 ) {
-// 		pending.push_back( std::next( data.begin(), pairLevel * ( i - 1 ) - 1 ) );
-// 		mainChain.push_back( std::next( data.begin(), pairLevel * i - 1 ) );
-// 	}
-
-// 	int prevJacobsthalNum = _numberJacobsthal( 1 );
-// 	int insertedNums = 0;
-
-// 	for ( int i = 2; ; i++ ) {
-// 		int currJacobsthalNum = _numberJacobsthal( i );
-// 		int diffJacobsthalNum = currJacobsthalNum - prevJacobsthalNum;
-
-// 		if ( diffJacobsthalNum > static_cast<int>( pending.size() ) ) break;
-
-// 		int numOfTimes = diffJacobsthalNum;
-// 		auto pendingIt = std::next( pending.begin(), diffJacobsthalNum - 1 );
-// 		auto boundIt = std::next( mainChain.begin(), currJacobsthalNum + insertedNums );
-
-// 		while ( numOfTimes ) {
-// 			auto idx = std::upper_bound( mainChain.begin(), boundIt, *pendingIt, _compare<Iterator> );
-// 			// auto idx = std::upper_bound(
-//             //     mainChain.begin(), boundIt, *pendingIt,
-//             //     [this](const Iterator& a, const Iterator& b) {
-//             //         _comparisonCounter++;
-//             //         return *a < *b;
-//             //     });
-// 			mainChain.insert( idx, *pendingIt );
-// 			numOfTimes--;
-// 			pendingIt = pending.erase( pendingIt );
-// 			std::advance( pendingIt, -1 );
-// 			boundIt = std::next( mainChain.begin(), currJacobsthalNum + insertedNums );
-// 		}
-
-// 		prevJacobsthalNum = currJacobsthalNum;
-// 		insertedNums += diffJacobsthalNum;
-// 	}
-
-// 	for ( size_t i = 0; i < pending.size(); i++ ) {
-// 		auto currPending = std::next( pending.begin(), i );
-// 		auto currBound = std::next( mainChain.begin(), mainChain.size() - pending.size() + i );
-// 		auto idx = std::upper_bound( mainChain.begin(), currBound, *currPending, _compare<Iterator> );
-// 		// auto idx = std::upper_bound(
-//         //     mainChain.begin(), currBound, *currPending,
-//         //     [this](const Iterator& a, const Iterator& b) {
-//         //         _comparisonCounter++;
-//         //         return *a < *b;
-//         //     });
-// 		mainChain.insert( idx, *currPending );
-// 	}
-
-// 	if ( isOdd ) {
-// 		auto oddPair = std::next( end, pairLevel - 1 );
-// 		auto idx = std::upper_bound( mainChain.begin(), mainChain.end(), oddPair, _compare<Iterator> );
-// 		// auto idx = std::upper_bound(
-//         //     mainChain.begin(), mainChain.end(), oddPair,
-//         //     [this](const Iterator& a, const Iterator& b) {
-//         //         _comparisonCounter++;
-//         //         return *a < *b;
-//         //     });
-// 		mainChain.insert( idx, oddPair );
-// 	}
-
-// 	std::vector<int> copy;
-// 	copy.reserve( data.size() );
-
-// 	for ( auto it = mainChain.begin(); it != mainChain.end(); it++ ) {
-// 		for ( int i = 0; i < pairLevel; i++ ) {
-// 			Iterator pairStart = *it;
-// 			std::advance( pairStart, -pairLevel + i + 1 );
-// 			copy.push_back( *pairStart );
-// 		}
-// 	}
-
-// 	Iterator dataIt = data.begin();
-// 	for ( auto copyIt = copy.begin(); copyIt != copy.end(); copyIt++ ) {
-// 		*dataIt = *copyIt;
-// 		dataIt++;
-// 	}
-// }
 
 void	PmergeMe::parseInput( int argc, char** argv ) {
 
@@ -624,10 +456,10 @@ void	PmergeMe::sortData( void ) {
 	auto end = std::chrono::high_resolution_clock::now();
 	_vectorTime = std::chrono::duration<double, std::micro>(end - start).count();
 
-	start = std::chrono::high_resolution_clock::now();
-	_sortFordJohnson( _dequeData, 1 );
-	end = std::chrono::high_resolution_clock::now();
-	_dequeTime = std::chrono::duration<double, std::micro>(end - start).count();
+	// start = std::chrono::high_resolution_clock::now();
+	// _sortFordJohnson( _dequeData, 1 );
+	// end = std::chrono::high_resolution_clock::now();
+	// _dequeTime = std::chrono::duration<double, std::micro>(end - start).count();
 
 	_printResult( AFTER );
 }

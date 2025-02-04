@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/19 19:17:03 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/02/03 21:36:46 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/02/04 21:39:37 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ private:
 
 	size_t							_countMinComparisons( size_t n ) const;
 
-	size_t							_jacobsthal( size_t n );
+	// size_t							_jacobsthal( size_t n );
 
 	template <typename Container>
 	void							_printElements( Container& data ) const;
@@ -57,16 +57,15 @@ private:
 	void							_sortPairs( typename Container::iterator start,
 											typename Container::iterator end, size_t elementSize );
 
-	// template <typename Container>
-	// void 							binaryInsertToMainChain(typename Container::iterator elemToInsert,
-    //                                    Container& mainChain,
-    //                                    size_t elementSize);
-
-	// void							calculateNextJacobsthal(size_t& currJacobsthal, size_t& prevJacobsthal);
+	void							_updateJacobsthal( size_t& currJacobsthal, size_t& prevJacobsthal );
 
 	template <typename Container>
-	void							_binarySearchInsert(Container& dst, const Container& src,
-											typename Container::const_iterator srcIt, size_t elementSize);
+	size_t							_findElementIndex( Container& src, int value, size_t elementSize);
+
+	template <typename Container>
+	void							_binarySearchInsert( Container& dst, const Container& src,
+											typename Container::const_iterator srcIt, size_t elementSize,
+											size_t dstStart, size_t dstEnd );
 
 	template <typename Container>
 	void							_insertion( Container& data, typename Container::iterator end,

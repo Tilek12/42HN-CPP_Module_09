@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/19 19:28:41 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/02/03 21:48:03 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/02/05 00:09:39 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,9 +47,9 @@ size_t	PmergeMe::_countMinComparisons( size_t n ) const {
 	return static_cast<size_t>( std::ceil( result ) );
 }
 
-size_t	PmergeMe::_jacobsthal( size_t n ) {
-	return std::round( ( std::pow( 2, n + 1 ) + std::pow( -1, n ) ) / 3 );
-}
+// size_t	PmergeMe::_jacobsthal( size_t n ) {
+// 	return std::round( ( std::pow( 2, n + 1 ) + std::pow( -1, n ) ) / 3 );
+// }
 
 template <typename Container>
 void	PmergeMe::_printElements( Container& data ) const {
@@ -114,19 +114,18 @@ bool	PmergeMe::_compare( Iter left, Iter right ) {
 	return *left < *right;
 }
 
-// void	PmergeMe::calculateNextJacobsthal(size_t& currJacobsthal, size_t& prevJacobsthal) {
+void	PmergeMe::_updateJacobsthal(size_t& currJacobsthal, size_t& prevJacobsthal) {
 
-// 	size_t nextJacobsthal = currJacobsthal + 2 * prevJacobsthal;
-// 	prevJacobsthal = currJacobsthal;
-// 	currJacobsthal = nextJacobsthal;
-// 	// std::cout << "--- prevJacobsthal = " << prevJacobsthal << std::endl;
-// 	std::cout << "--- currJacobsthal = " << currJacobsthal << std::endl;
-// }
+	size_t nextJacobsthal = currJacobsthal + 2 * prevJacobsthal;
+	prevJacobsthal = currJacobsthal;
+	currJacobsthal = nextJacobsthal;
+}
 
 // Template function to perform binary search and insert an element into the correct position
 template <typename Container>
 void	PmergeMe::_binarySearchInsert( Container& dst, const Container& src,
-									typename Container::const_iterator srcIt, size_t elementSize ) {
+									typename Container::const_iterator srcIt, size_t elementSize,
+									size_t dstStart, size_t dstEnd ) {
 
 	// Ensure srcIt is within the bounds of src
 	if ( srcIt < src.begin() || srcIt + elementSize > src.end() ) {
@@ -135,32 +134,74 @@ void	PmergeMe::_binarySearchInsert( Container& dst, const Container& src,
 	}
 
 	// Calculate the value of the element to insert
-	int insertValue = *(srcIt + elementSize - 1);
+	int insertValue = *( srcIt + elementSize - 1 );
 
 	// Calculate the start and end iterators for the element to insert
 	auto srcStart = srcIt; // Start of the element in src
 	auto srcEnd = srcStart + elementSize; // End of the element in src (one past the last)
 
+	// Validate dstStart and dstEnd
+	size_t numElements = dst.size() / elementSize;
+	if (dstStart >= numElements || dstEnd > numElements || dstStart > dstEnd) {
+		std::cerr << "Error: Invalid dstStart or dstEnd!" << std::endl;
+		std::cerr << "Error: numElements = " << numElements << std::endl;
+		std::cerr << "Error: dstStart = " << dstStart << std::endl;
+		std::cerr << "Error: dstEnd = " << dstEnd << std::endl;
+		return;
+	}
+
 	// Perform binary search to find the correct position in the destination container
-	int low = 0;
-	int high = ( dst.size() / elementSize ) - 1;
+	int low = dstStart;
+	int high = dstEnd;
 
 	while ( low <= high ) {
-		int mid = low + (high - low) / 2;
-		int dstElemIndex = mid * elementSize + (elementSize - 1);
+		int mid = low + ( high - low ) / 2;
+		int dstElemIndex = mid * elementSize + ( elementSize - 1 );
+
+		// Ensure dstElemIndex is within bounds
+		if (dstElemIndex >= (int)dst.size()) {
+			std::cerr << "Error: dstElemIndex out of bounds!" << std::endl;
+			return;
+		}
+
+		// Calculate the position to insert the new element
 		int dstElemValue = dst[dstElemIndex];
 
 		if ( dstElemValue < insertValue )
 			low = mid + 1;
 		else
 			high = mid - 1;
+		_comparisonCounter++;
 	}
 
 	// Calculate the position to insert the new element
 	int insertPosition = low * elementSize;
 
+	// Ensure insertPosition is within bounds
+	if (insertPosition > (int)dst.size()) {
+		std::cerr << "Error: insertPosition out of bounds!" << std::endl;
+		return;
+	}
+
 	// Insert the element into the container
 	dst.insert( dst.begin() + insertPosition, srcStart, srcEnd );
+}
+
+// Function to find the index of the element whose representer matches the target value
+template <typename Container>
+size_t	PmergeMe::_findElementIndex( Container& src, int value, size_t elementSize) {
+
+	// Start searching from the last element
+	for ( size_t i = ( src.size() / elementSize ); i > 0; --i ) {
+		size_t srcIndex = ( i - 1 ) * elementSize + ( elementSize - 1 ); // Index of the representer
+		if ( src[srcIndex] == value ) {
+			// Found the element
+			return i - 1; // Return the index of the element
+		}
+	}
+
+	// Element not found
+	return 0; // Return an invalid index
 }
 
 template <typename Container>
@@ -218,60 +259,120 @@ void	PmergeMe::_insertion( Container& data, typename Container::iterator end,
 	if ( largerElements.size() > elementSize )
 		mainChain.insert( mainChain.end(), std::next( largerElements.begin(), elementSize ), std::next( largerElements.begin(), 2 * elementSize ) );
 
-	Iterator smallElemPos = smallerElements.begin() + elementSize;
 
-	_binarySearchInsert( mainChain, smallerElements, smallElemPos, elementSize );
+	// Insert elements from smallerElements into mainChain using Jacobsthal numbers
+	size_t currJacobsthal = 3;
+	size_t prevJacobsthal = 1;
+	size_t elementsToInsert = 1;
+	Iterator smallIt = smallerElements.begin();
+	Iterator largeIt = largerElements.begin();
+	if ( mainChain.size() / elementSize == 3 )
+		largeIt = largerElements.begin() + elementSize;
 
-    // // Insert elements from smallerElements into mainChain using Jacobsthal numbers
-    // size_t currJacobsthal = 3;
-    // size_t prevJacobsthal = 1;
-    // size_t elementsToInsert = 1;
-    // Iterator smallElemPosToInsert = smallerElements.begin() + elementSize;
-    // Iterator largeElemPosToInsert = mainChain.begin() + elementSize;
+	while ( smallIt != smallerElements.end() ) {
 
-    // while (true) {
-    //     if (currJacobsthal <= smallerElements.size() / elementSize) {
-    //         elementsToInsert = currJacobsthal - prevJacobsthal;
-    //         smallElemPosToInsert = smallerElements.begin() + (currJacobsthal * elementSize);
+		size_t	smallItIndex;
+		size_t	largeItIndex;
+		size_t	startPos;
+		size_t	lastPos;
 
-    //         for (size_t i = 0; i < elementsToInsert; i++) {
-    //             smallElemPosToInsert -= elementSize;
-    //             binaryInsertToMainChain(smallElemPosToInsert, mainChain, elementSize);
-    //         }
+		if ( currJacobsthal <= smallerElements.size() / elementSize ) {
+			elementsToInsert = currJacobsthal - prevJacobsthal;
+			smallIt = smallerElements.begin() + ( currJacobsthal * elementSize );
 
-    //         if (largerElements.size() > (largeElemPosToInsert - mainChain.begin()) / elementSize) {
-    //             for (size_t i = 0; i < elementsToInsert; i++) {
-    //                 largeElemPosToInsert += elementSize;
-    //                 binaryInsertToMainChain(largeElemPosToInsert, mainChain, elementSize);
-    //                 if (largeElemPosToInsert == largerElements.end())
-    //                     break;
-    //             }
-    //         }
+			for ( size_t i = 0; i < elementsToInsert; i++ ) {
+				smallIt -= elementSize;
+				smallItIndex = std::distance(smallerElements.begin(), smallIt) / elementSize;
+				largeItIndex = std::distance(largerElements.begin(), largeIt) / elementSize;
 
-	// 		calculateNextJacobsthal(currJacobsthal, prevJacobsthal);
-    //     } else {
-    //         smallElemPosToInsert += elementSize;
-    //         binaryInsertToMainChain(smallElemPosToInsert, mainChain, elementSize);
+				startPos = 0;
+				if ( smallItIndex == largeItIndex )
+					lastPos = mainChain.size() / elementSize - 2;
+				else
+					lastPos = mainChain.size() / elementSize - 1;
+				_binarySearchInsert( mainChain, smallerElements, smallIt, elementSize, startPos, lastPos );
+			}
 
-    //         if (largerElements.size() > (largeElemPosToInsert - mainChain.begin()) / elementSize) {
-    //             largeElemPosToInsert += elementSize;
-    //             binaryInsertToMainChain(largeElemPosToInsert, mainChain, elementSize);
-    //         }
-    //     }
+			smallIt = smallerElements.begin() + ( ( currJacobsthal - 1 ) * elementSize );
 
-    //     if (smallElemPosToInsert >= smallerElements.end())
-    //         break;
+// std::cout << "*** largersElems = " << largerElements.size() / elementSize - 1 << std::endl;
+// std::cout << "*** largersIndex = " << largeItIndex << std::endl;
 
-    //     elementsToInsert = 1;
-    // }
+			if ( ( largerElements.size() / elementSize - 1 ) > largeItIndex ) {
+				for ( size_t i = 0; i < elementsToInsert; i++ ) {
+					startPos = _findElementIndex( mainChain, *largeIt, elementSize );
+					lastPos = mainChain.size() / elementSize - 1;
 
-	// // Copy the sorted mainChain back to the original data
-	// std::copy( mainChain.begin(), mainChain.end(), data.begin() );
+std::cout << "+++ startPos = " << startPos << std::endl;
+std::cout << "+++ lastPos = " << lastPos << std::endl;
+
+					largeIt += elementSize;
+					if ( largeIt == largerElements.end() )
+						break;
+
+//////////////////////////////////////////////////////////////////////
+	// std::cout << "=== smallItIndex = " << smallItIndex << std::endl;
+	// std::cout << "=== smallIt	 = " << *smallIt << std::endl;
+	std::cout << "=== largeItIndex = " << largeItIndex << std::endl;
+	std::cout << "=== largeIt	 = " << *largeIt << std::endl << std::endl;
+//////////////////////////////////////////////////////////////////////
+
+					if ( startPos == lastPos )
+						mainChain.insert( mainChain.end(), largeIt, largeIt + elementSize );
+					else
+						_binarySearchInsert( mainChain, largerElements, largeIt, elementSize, startPos, lastPos );
+				}
+			}
+
+			_updateJacobsthal(currJacobsthal, prevJacobsthal);
+		} else {
+			smallIt += elementSize;
+
+			if ( smallIt == smallerElements.end() )
+				break;
+
+			smallItIndex = std::distance(smallerElements.begin(), smallIt) / elementSize;
+			largeItIndex = std::distance(largerElements.begin(), largeIt) / elementSize;
+
+			startPos = 0;
+			if ( smallItIndex == largeItIndex )
+				lastPos = mainChain.size() / elementSize - 2;
+			else
+				lastPos = mainChain.size() / elementSize - 1;
+			_binarySearchInsert( mainChain, smallerElements, smallIt, elementSize, startPos, lastPos );
+
+//////////////////////////////////////////////////////////////////////
+	// std::cout << "=== smallItIndex = " << smallItIndex << std::endl;
+	// std::cout << "=== smallIt	 = " << *smallIt << std::endl;
+	std::cout << "=== largeItIndex = " << largeItIndex << std::endl;
+	std::cout << "=== largeIt	 = " << *largeIt << std::endl << std::endl;
+//////////////////////////////////////////////////////////////////////
+
+			startPos = _findElementIndex( mainChain, *largeIt, elementSize );
+			lastPos = mainChain.size() / elementSize - 1;
+			largeIt += elementSize;
+			if ( largeIt == largerElements.end() )
+				break;
+
+std::cout << "+++ startPos = " << startPos << std::endl;
+std::cout << "+++ lastPos = " << lastPos << std::endl;
+
+			if ( startPos == lastPos )
+				mainChain.insert( mainChain.end(), largeIt, largeIt + elementSize );
+			else
+				_binarySearchInsert( mainChain, largerElements, largeIt, elementSize, startPos, lastPos );
+		}
+
+		elementsToInsert = 1;
+	}
+
+	// Copy the sorted mainChain back to the original data
+	std::copy( mainChain.begin(), mainChain.end(), data.begin() );
 
 
 
 
-/////// START OF PSEUDOCODE OF INSERTIONS PART ///////
+///////////////////// START OF PSEUDOCODE OF INSERTION PART /////////////////////
 
 	// Insert elements from smallerElements into mainChain using Jacobsthal numbers
 
@@ -279,7 +380,7 @@ void	PmergeMe::_insertion( Container& data, typename Container::iterator end,
 	// size_t prevJacobsthal = 1;
 	// size_t elementsToInsert = 1;
 	// Iterator smallElemPosToInsert = 1;
-	// Iterator largeElemPosToInsert = mainChain.size() - 1;
+	// Iterator largeElemPos = mainChain.size() - 1;
 
 	// while ( true ) {
 
@@ -291,20 +392,20 @@ void	PmergeMe::_insertion( Container& data, typename Container::iterator end,
 	// 			binaryInsertToMainChain( smallElemPosToInsert, mainChain, startPointInMainChain, endPointInMainChain );
 	// 			smallElemPosToInsert--;
 	// 		}
-	// 		if ( largerElements.size() > largeElemPosToInsert ) {
+	// 		if ( largerElements.size() > largeElemPos ) {
 	// 			for ( size_t i = 0; i <= elementsToInsert; i++ ) {
-	// 				largeElemPosToInsert++;
-	// 				binaryInsertToMainChain( largeElemPosToInsert, mainChain, startPointInMainChain, endPointInMainChain );
-	// 				if ( largeElemPosToInsert == largerElements.size() )
+	// 				largeElemPos++;
+	// 				binaryInsertToMainChain( largeElemPos, mainChain, startPointInMainChain, endPointInMainChain );
+	// 				if ( largeElemPos == largerElements.size() )
 	// 					break;
 	// 			}
 	// 		}
 	// 	} else {
 	// 		smallElemPosToInsert++;
 	// 		binaryInsertToMainChain( smallElemPosToInsert, mainChain, startPointInMainChain, endPointInMainChain );
-	// 		if ( largerElements.size() > largeElemPosToInsert ) {
-	// 			largeElemPosToInsert++;
-	// 			binaryInsertToMainChain( largeElemPosToInsert, mainChain, startPointInMainChain, endPointInMainChain );
+	// 		if ( largerElements.size() > largeElemPos ) {
+	// 			largeElemPos++;
+	// 			binaryInsertToMainChain( largeElemPos, mainChain, startPointInMainChain, endPointInMainChain );
 	// 		}
 
 	// 	}
@@ -320,9 +421,14 @@ void	PmergeMe::_insertion( Container& data, typename Container::iterator end,
 
 	// std::copy( sortedData.begin(), sortedData.end(), data.begin() );
 
-/////// END OF PSEUDOCODE OF INSERTIONS PART ///////
+///////////////////// END OF PSEUDOCODE OF INSERTION PART /////////////////////
 
 //////////////////////////////////////////////////////////////////////
+	// std::cout << "data: ";
+	// for ( const auto& num : data )
+	// 	std::cout << num << " ";
+	// std::cout << std::endl;
+
 	std::cout << "mainChain " << elementSize << "\t : ";
 	size_t counter = 0;
 	for ( const auto& num : mainChain ) {
@@ -399,15 +505,15 @@ void	PmergeMe::_sortFordJohnson( Container& data, size_t elementSize ) {
 	if ( elementsNum < 2 ) return;
 
 //////////////////////////////////////////////////////////////////////
-	std::cout << "Before " << elementSize << ": ";
-	size_t counter = 0;
-	for ( const auto& num : data ) {
-		counter++;
-		std::cout << num << " ";
-		if ( counter % ( elementSize * 2 ) == 0 )
-			std::cout << "|| ";
-	}
-	std::cout << std::endl << std::endl;
+	// std::cout << "Before " << elementSize << ": ";
+	// size_t counter = 0;
+	// for ( const auto& num : data ) {
+	// 	counter++;
+	// 	std::cout << num << " ";
+	// 	if ( counter % ( elementSize * 2 ) == 0 )
+	// 		std::cout << "|| ";
+	// }
+	// std::cout << std::endl << std::endl;
 //////////////////////////////////////////////////////////////////////
 
 	bool isOdd = elementsNum % 2 == 1;
@@ -420,15 +526,15 @@ void	PmergeMe::_sortFordJohnson( Container& data, size_t elementSize ) {
 	_insertion( data, end, elementSize, elementsNum );
 
 //////////////////////////////////////////////////////////////////////
-	std::cout << "After " << elementSize << " : ";
-	counter = 0;
-	for ( const auto& num : data ) {
-		counter++;
-		std::cout << num << " ";
-		if ( counter % (elementSize * 2) == 0 )
-			std::cout << "|| ";
-	}
-	std::cout << std::endl << std::endl;
+	// std::cout << "After " << elementSize << " : ";
+	// counter = 0;
+	// for ( const auto& num : data ) {
+	// 	counter++;
+	// 	std::cout << num << " ";
+	// 	if ( counter % (elementSize * 2) == 0 )
+	// 		std::cout << "|| ";
+	// }
+	// std::cout << std::endl << std::endl;
 //////////////////////////////////////////////////////////////////////
 
 }
@@ -462,4 +568,8 @@ void	PmergeMe::sortData( void ) {
 	// _dequeTime = std::chrono::duration<double, std::micro>(end - start).count();
 
 	_printResult( AFTER );
+
+	if ( std::is_sorted( _vectorData.begin(), _vectorData.end() ) )
+		std::cout << "--- SORTED!!! ---\n\n";
+
 }

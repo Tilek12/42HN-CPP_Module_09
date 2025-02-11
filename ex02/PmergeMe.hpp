@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/19 19:17:03 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/02/08 18:52:19 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/02/11 22:12:21 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,14 @@
 #include <cmath>
 
 enum	Prefix { BEFORE, AFTER };
+
+struct	Index {
+	size_t	constIndex;
+	size_t	actualIndex;
+
+	// Optional constructor for convenience
+	Index( size_t constIdx, size_t actualIdx ) : constIndex( constIdx ), actualIndex( actualIdx ) {}
+};
 
 class	PmergeMe {
 
@@ -46,25 +54,27 @@ private:
 
 	void		_updateJacobsthal( size_t& currJacobsthal, size_t& prevJacobsthal );
 
-	template <typename Container>
-	size_t		_findElementIndex( Container& dst, Container& src,
-									size_t srcIndex, size_t elementSize );
+	void		_updateIndexes( std::vector<Index>& dst , size_t insertIndex );
 
 	template <typename Container>
-	void		_binarySearchInsert( Container& dst, size_t dstEnd, const Container& src,
+	size_t		_binarySearchInsert( Container& dst, size_t dstEnd, const Container& src,
 									typename Container::const_iterator srcIt, size_t elementSize );
 
-	template <typename Container>
-	bool		_isExist(const Container& container, size_t elementIndex, size_t elementSize);
+	size_t		_findElementIndex( const std::vector<Index>& dst, size_t searchIndex );
+
+	bool		_isExist( const std::vector<Index>& dst, size_t searchIndex);
 
 	template <typename Container>
-	void		_insertElements( Container& mainChain, Container& largers, Container& smallers,
+	void		_insertElements( Container& mainChain, Container& smallers,
+									std::vector<Index>& largerIndexes,
 									typename Container::iterator smallCurrIt,
 									size_t elementsToInsert, size_t elementSize );
 
 	template <typename Container>
 	void		_defineContainers( Container& data, size_t elementsNum, size_t elementSize,
-									Container& mainChain, Container& largers, Container& smallers );
+									 Container& mainChain,
+									 std::vector<Index>& largerIndexes,
+									 Container& smallers );
 
 	template <typename Container>
 	void		_sortInsertion( Container& data, size_t elementsNum, size_t elementSize );

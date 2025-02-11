@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/19 19:28:41 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/02/11 12:05:50 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/02/11 22:46:09 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,8 +41,8 @@ size_t	PmergeMe::_countPossibleComparisons( size_t n ) const {
 
 	size_t result = 0;
 
-	for (size_t k = 2; k <= n; ++k)
-		result += static_cast<size_t>(std::ceil(std::log2( 3 * k / 4.0 )));
+	for ( size_t k = 2; k <= n; ++k )
+		result += static_cast<size_t>(std::ceil( std::log2( 3 * k / 4.0 ) ));
 
 	return result;
 }
@@ -107,15 +107,21 @@ void	PmergeMe::_updateJacobsthal( size_t& currJacobsthal, size_t& prevJacobsthal
 	currJacobsthal = nextJacobsthal;
 }
 
+void	PmergeMe::_updateIndexes( std::vector<Index>& dst , size_t insertPos ) {
+
+	for ( auto& index : dst ) {
+		if ( index.actualIndex >= insertPos )
+			index.actualIndex = index.actualIndex + 1;
+	}
+}
+
 template <typename Container>
-void PmergeMe::_binarySearchInsert( Container& dst, size_t dstEnd, const Container& src,
+size_t	PmergeMe::_binarySearchInsert( Container& dst, size_t dstEnd, const Container& src,
 									typename Container::const_iterator srcIt, size_t elementSize ) {
 	// Validate input parameters
 	if ( elementSize == 0 || dst.empty() || src.empty() || dstEnd > dst.size() / elementSize ||
-		srcIt < src.begin() || srcIt + elementSize > src.end() ) {
-		std::cerr << "Error: Invalid input parameters!" << std::endl;
-		return;
-	}
+		srcIt < src.begin() || srcIt + elementSize > src.end() )
+		throw std::out_of_range( "Error: Invalid input parameters!" );
 
 	// Define the insertion element
 	int insertValue = *( srcIt + elementSize - 1 );
@@ -125,18 +131,14 @@ void PmergeMe::_binarySearchInsert( Container& dst, size_t dstEnd, const Contain
 	int low = 0;
 	int high = static_cast<int>(dstEnd);
 
-size_t currComparisons = _comparisonCounter;
-
 	// Perform binary search for the insertion position
 	while ( low <= high ) {
 		int mid = low + ( high - low ) / 2;
 		int dstElemIndex = mid * static_cast<int>(elementSize) + static_cast<int>(elementSize - 1);
 
 		// Check bounds
-		if ( dstElemIndex >= static_cast<int>(dst.size()) ) {
-			std::cerr << "Error: dstElemIndex out of bounds!" << std::endl;
-			return;
-		}
+		if ( dstElemIndex >= static_cast<int>(dst.size()) )
+			throw std::out_of_range( "Error: dstElemIndex out of bounds!" );
 
 		int dstElemValue = dst[dstElemIndex];
 		if ( dstElemValue < insertValue )
@@ -146,124 +148,83 @@ size_t currComparisons = _comparisonCounter;
 
 		_comparisonCounter++;
 	}
-// std::cout << "=== elementSize = " << elementSize << "\n";
-// std::cout << "*** smallers: ";
-// for ( const auto& num : src ) std::cout << num << " ";
-// 	std::cout << std::endl;
-// std::cout << "*** insertValue = " << insertValue << "\n";
-// std::cout << "+++ mainChain: ";
-// for ( const auto& num : dst ) std::cout << num << " ";
-// 	std::cout << std::endl;
-// std::cout << "+++ mainChain last index = " << dstEnd << "\n";
-// std::cout << "--- currComparisons = " << _comparisonCounter - currComparisons << "\n";
-// std::cout << "=== all Comparisons = " << _comparisonCounter << "\n\n";
 
 	int insertPosition = low * static_cast<int>(elementSize);
 
 	// Ensure insertPosition is within bounds
-	if ( insertPosition > static_cast<int>(dst.size()) ) {
-		std::cerr << "Error: insertPosition out of bounds!" << std::endl;
-		return;
-	}
+	if ( insertPosition > static_cast<int>(dst.size()) )
+		throw std::out_of_range( "Error: insertPosition out of bounds!" );
 
 	// Insert the element into the container
 	dst.insert( dst.begin() + insertPosition, srcStart, srcEnd );
+
+	return static_cast<size_t>(low);
 }
 
+// template <typename Container>
+size_t	PmergeMe::_findElementIndex( const std::vector<Index>& dst, size_t searchIndex ) {
 
-template <typename Container>
-size_t PmergeMe::_findElementIndex( Container& dst, Container& src,
-									size_t srcIndex, size_t elementSize ) {
-
-	// Check if srcIndex is valid
-	if ( srcIndex * elementSize + elementSize > src.size() ) {
-		throw std::out_of_range("Error: srcIndex is out of range!");
-	}
-
-	// Extract the element from src
-	size_t srcStartIndex = srcIndex * elementSize;
-	Container srcElement( src.begin() + srcStartIndex, src.begin() + srcStartIndex + elementSize );
-
-	// Get the representer of the srcElement
-	int srcRepresenter = srcElement.back();
-
-	// Perform binary search on dst
-	int low = 0;
-	int high = dst.size() / elementSize - 1;
-
-	while ( low <= high ) {
-		int mid = low + ( high - low ) / 2;
-		int dstStartIndex = mid * elementSize;
-
-		// Extract the current element from dst
-		Container dstElement( dst.begin() + dstStartIndex, dst.begin() + dstStartIndex + elementSize );
-
-		// Get the representer of the dstElement
-		int dstRepresenter = dstElement.back();
-
-		if ( dstRepresenter < srcRepresenter ) {
-			// If the representer is smaller, search the right half
-			low = mid + 1;
-		} else if ( dstRepresenter > srcRepresenter ) {
-			// If the representer is larger, search the left half
-			high = mid - 1;
-		} else {
-			// If the representers match, check the entire element
-			if ( dstElement == srcElement ) {
-				return mid; // Return the index of the element in dst
-			} else {
-				// If the elements don't match, continue searching in both directions
-				// First, search the left half
-				int left = mid - 1;
-				while ( left >= low ) {
-					int leftStartIndex = left * elementSize;
-					Container leftElement( dst.begin() + leftStartIndex, dst.begin() + leftStartIndex + elementSize );
-
-					if ( leftElement.back() != srcRepresenter ) break;
-					if ( leftElement == srcElement ) return left;
-
-					left--;
-				}
-
-				// Then, search the right half
-				int right = mid + 1;
-				while ( right <= high ) {
-					int rightStartIndex = right * elementSize;
-					Container rightElement( dst.begin() + rightStartIndex, dst.begin() + rightStartIndex + elementSize );
-
-					if ( rightElement.back() != srcRepresenter ) break;
-					if ( rightElement == srcElement ) return right;
-
-					right++;
-				}
-
-				break;
-			}
-		}
+	for ( const auto& index : dst ) {
+		if ( index.constIndex == searchIndex )
+			return index.actualIndex;
 	}
 
 	// If the element is not found, throw an exception
 	throw std::runtime_error( "Error: Element not found in dst!" );
 }
 
+bool	PmergeMe::_isExist( const std::vector<Index>& dst, size_t searchIndex ) {
+
+	for ( const auto& index : dst ) {
+		if ( index.constIndex == searchIndex )
+			return true;
+	}
+
+	return false;
+}
+
 template <typename Container>
-bool	PmergeMe::_isExist( const Container& container, size_t elementIndex, size_t elementSize ) {
+void	PmergeMe::_insertElements( Container& mainChain, Container& smallers,
+									std::vector<Index>& largerIndexes,
+									typename Container::iterator insertEnd,
+									size_t elementsToInsert, size_t elementSize ) {
 
-	size_t startIndex = elementIndex * elementSize;
+	size_t	searchIndex;
+	size_t	lastIndex;
+	size_t	insertIndex;
 
-	return ( startIndex + elementSize <= container.size() );
+	for ( size_t i = 0; i < elementsToInsert; i++ ) {
+		insertEnd -= elementSize;
+		searchIndex = std::distance( smallers.begin(), insertEnd ) / elementSize;
+
+		// Define the last last element in searching range
+		if ( _isExist( largerIndexes, searchIndex ) )
+			lastIndex = _findElementIndex( largerIndexes, searchIndex ) - 1;
+		else
+			lastIndex = ( mainChain.size() / elementSize ) - 1;
+
+		// Insert element using binary search and return the insertion index
+		insertIndex = _binarySearchInsert( mainChain, lastIndex, smallers, insertEnd, elementSize );
+
+		// Update actual indexes in largerIndexes after insertion
+		_updateIndexes( largerIndexes, insertIndex );
+	}
 }
 
 template <typename Container>
 void	PmergeMe::_defineContainers( Container& data, size_t elementsNum, size_t elementSize,
-									 Container& mainChain, Container& largers, Container& smallers ) {
+									 Container& mainChain,
+									 std::vector<Index>& largerIndexes,
+									 Container& smallers ) {
 
-	auto it = data.begin();
+	auto iter = data.begin();
+
+	Container	largers;
 
 	for ( size_t i = 0; i < elementsNum / 2; i++ ) {
 		// Define the start and end of the current pair
-		auto firstElementStart = it;
-		auto firstElementEnd = std::next( it, elementSize );
+		auto firstElementStart = iter;
+		auto firstElementEnd = std::next( iter, elementSize );
 		auto secondElementStart = firstElementEnd;
 		auto secondElementEnd = std::next( secondElementStart, elementSize );
 
@@ -281,38 +242,21 @@ void	PmergeMe::_defineContainers( Container& data, size_t elementsNum, size_t el
 		}
 
 		// Move to the next pair
-		it = secondElementEnd;
+		iter = secondElementEnd;
 	}
 
 	// Put the last unpaired element to smallerElements sequens
 	if ( elementsNum % 2 == 1 )
-		smallers.insert( smallers.end(), it, std::next( it, elementSize ) );
+		smallers.insert( smallers.end(), iter, std::next( iter, elementSize ) );
 
 	// Build the initial mainChain
 	mainChain.insert( mainChain.end(), smallers.begin(), std::next( smallers.begin(), elementSize) );
 	mainChain.insert( mainChain.end(), largers.begin(), largers.end() );
-}
 
-template <typename Container>
-void	PmergeMe::_insertElements( Container& mainChain, Container& largers, Container& smallers,
-									typename Container::iterator insertEnd,
-									size_t elementsToInsert, size_t elementSize ) {
-
-	size_t	insertIndex;
-	size_t	lastIndex;
-
-	for ( size_t i = 0; i < elementsToInsert; i++ ) {
-
-		insertEnd -= elementSize;
-		insertIndex = std::distance( smallers.begin(), insertEnd ) / elementSize;
-
-		if ( _isExist( largers, insertIndex, elementSize ) )
-			lastIndex = _findElementIndex( mainChain, largers, insertIndex, elementSize ) - 1;
-		else
-			lastIndex = ( mainChain.size() / elementSize ) - 1;
-
-		_binarySearchInsert( mainChain, lastIndex, smallers, insertEnd, elementSize );
-
+	size_t idxConst = 0;
+	size_t idxActual = 1;
+	for ( auto it = mainChain.begin() + elementSize; it != mainChain.end(); it += elementSize ) {
+		largerIndexes.emplace_back( idxConst++, idxActual++ );
 	}
 }
 
@@ -322,11 +266,12 @@ void	PmergeMe::_sortInsertion( Container& data, size_t elementsNum, size_t eleme
 	if ( elementsNum <= 2 ) return;
 
 	// Temporary containers
-	Container	mainChain;
-	Container	largerElements;
-	Container	smallerElements;
+	Container			mainChain;
+	std::vector<Index>	largerIndexes;
+	Container			smallerElements;
 
-	_defineContainers( data, elementsNum, elementSize, mainChain, largerElements, smallerElements );
+	// Fill in temporary containers
+	_defineContainers( data, elementsNum, elementSize, mainChain, largerIndexes, smallerElements );
 
 	size_t currJacobsthal = 3;
 	size_t prevJacobsthal = 1;
@@ -337,40 +282,43 @@ void	PmergeMe::_sortInsertion( Container& data, size_t elementsNum, size_t eleme
 		auto	insertEnd = smallerElements.end();
 		size_t	elementsToInsert = 1;
 
-		// Put elements from smallerElements to mainChain using Jacobsthal number
+		// Put elements in reverse order using Jacobsthal number
 		if ( currJacobsthal <= smallerElements.size() / elementSize ) {
 			elementsToInsert = currJacobsthal - prevJacobsthal;
 			insertEnd = smallerElements.begin() + ( currJacobsthal * elementSize );
 
-			_insertElements( mainChain, largerElements, smallerElements, insertEnd, elementsToInsert, elementSize );
+			// Insert elements from smallElements to mainChain
+			_insertElements( mainChain, smallerElements, largerIndexes, insertEnd, elementsToInsert, elementSize );
 
 			insertStart = smallerElements.begin() + ( ( currJacobsthal - 1 ) * elementSize );
 			if ( insertStart + elementSize == smallerElements.end() ) break;
 
+			// Calculate next Jacobsthal number and update the previous one
 			_updateJacobsthal( currJacobsthal, prevJacobsthal );
 
 		} else {
 
-			// Put elements from smallerElements to mainChain
+			// Put elements in reverse order
 			insertStart = smallerElements.begin() + ( ( prevJacobsthal - 1 ) * elementSize );
 			insertEnd = smallerElements.end();
 			elementsToInsert = std::distance( insertStart, insertEnd - elementSize ) / elementSize;
 
-			_insertElements( mainChain, largerElements, smallerElements, insertEnd, elementsToInsert, elementSize );
+			// Insert elements from smallElements to mainChain
+			_insertElements( mainChain, smallerElements, largerIndexes, insertEnd, elementsToInsert, elementSize );
 
 			break;
 		}
 	}
 
+	// Update the main sequence of elements
 	std::copy( mainChain.begin(), mainChain.end(), data.begin() );
-
 }
 
 template <typename Container>
 void	PmergeMe::_sortPairs( typename Container::iterator start,
 							  typename Container::iterator end, size_t elementSize ) {
 
-	// Iterate through the container in steps of 2 * pairLevel
+	// Iterate through the container in steps of 2 * elementSize
 	for ( auto it = start; it != end; std::advance( it, 2 * elementSize ) ) {
 		// Define the range of the current pair
 		auto firstPairStart = it;
@@ -396,21 +344,22 @@ void	PmergeMe::_sortPairs( typename Container::iterator start,
 template <typename Container>
 void	PmergeMe::_sortFordJohnson( Container& data, size_t elementSize ) {
 
+	// Nothing to sort if the number of elements is < 2
 	size_t elementsNum = data.size() / elementSize;
 	if ( elementsNum < 2 ) return;
 
-	using Iterator = typename Container::iterator;
+	// Define starting and end position
+	auto start = data.begin();
+	auto end = ( elementsNum % 2 == 1 ) ? std::next( start, elementSize * ( elementsNum - 1 ) )
+										: std::next( start, elementSize * elementsNum );
 
-	Iterator start = data.begin();
-	Iterator end;
+	// Start the first step of sorting algorithm - sorting elements in pairs
+	_sortPairs<Container>( start, end, elementSize );
 
-	if ( elementsNum % 2 == 1 )
-		end = std::next( start, elementSize * ( elementsNum - 1) );
-	else
-		end = std::next( start, elementSize * elementsNum );
-
-	this->_sortPairs<Container>( start, end, elementSize );
+	// Recursively call function itself until the number of elements is < 2
 	_sortFordJohnson( data, elementSize * 2 );
+
+	// Start the second step of sorting algorithm - insert elements using binary search
 	_sortInsertion( data, elementsNum, elementSize );
 }
 
@@ -426,28 +375,25 @@ void	PmergeMe::parseInput( int argc, char** argv ) {
 		_vectorData.push_back( value );
 		_dequeData.push_back( value );
 	}
-
-	// Check if the input is already sorted
-	// if ( std::is_sorted( _vectorData.begin(), _vectorData.end() )
-	// 	&& std::is_sorted( _dequeData.begin(), _dequeData.end() ))
-	// 	throw std::invalid_argument( "Input is already sorted" );
 }
 
 void	PmergeMe::sortData( void ) {
 
 	_printResult( BEFORE );
 
+	// Start sorting for vector container
 	_comparisonCounter = 0;
 	auto start = std::chrono::high_resolution_clock::now();
 	_sortFordJohnson( _vectorData, 1 );
 	auto end = std::chrono::high_resolution_clock::now();
 	_vectorTime = std::chrono::duration<double, std::micro>(end - start).count();
 
-	// _comparisonCounter = 0;
-	// start = std::chrono::high_resolution_clock::now();
-	// _sortFordJohnson( _dequeData, 1 );
-	// end = std::chrono::high_resolution_clock::now();
-	// _dequeTime = std::chrono::duration<double, std::micro>(end - start).count();
+	// Start sorting for deque container
+	_comparisonCounter = 0;
+	start = std::chrono::high_resolution_clock::now();
+	_sortFordJohnson( _dequeData, 1 );
+	end = std::chrono::high_resolution_clock::now();
+	_dequeTime = std::chrono::duration<double, std::micro>(end - start).count();
 
 	_printResult( AFTER );
 }

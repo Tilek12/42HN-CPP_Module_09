@@ -9,7 +9,7 @@ SRC =	main.cpp \
 		PmergeMe.cpp
 OBJ = $(SRC:.cpp=.o)
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++17
+CXXFLAGS = -Wall -Wextra -Werror -std=c++17 -Ofast
 
 # Compile the executable
 all: $(NAME)

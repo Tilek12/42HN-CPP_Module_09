@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/16 19:54:39 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/02/12 09:51:22 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/02/12 17:19:13 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -152,7 +152,7 @@ std::string	BitcoinExchange::_findClosestDate( const std::string& date ) const {
 	if ( it == _database.end() || ( it != _database.begin() && it->first != date ) )
 		--it;
 
-	return ( it == _database.end() ) ? "" : it->first;
+	return ( it == _database.begin() && it->first != date ) ? "" : it->first;
 }
 
 /*----------------------------*/

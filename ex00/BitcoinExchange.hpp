@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/16 19:54:48 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/18 13:19:32 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/02/12 09:51:31 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,9 @@
 #include <sstream>
 #include <exception>
 
+/*--------------------------------*/
+/*  Define BitcoinExchange class  */
+/*--------------------------------*/
 class	BitcoinExchange {
 
 private:

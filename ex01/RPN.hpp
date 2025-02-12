@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/18 19:36:39 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/18 20:33:53 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/02/12 09:54:56 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,9 @@
 #include <iostream>
 #include <exception>
 
+/*--------------------*/
+/*  Define RPN class  */
+/*--------------------*/
 class	RPN {
 
 private:

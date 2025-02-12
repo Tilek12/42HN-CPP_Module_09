@@ -6,16 +6,25 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/18 19:45:20 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/18 20:42:56 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/02/12 09:54:54 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "RPN.hpp"
 
+/*-------------------------*/
+/*  RPN Class constructor  */
+/*-------------------------*/
 RPN::RPN( void ) {}
 
+/*------------------------------*/
+/*  RPN Class copy constructor  */
+/*------------------------------*/
 RPN::RPN( const RPN& other ) : _stack( other._stack ) {}
 
+/*--------------------------------------*/
+/*  RPN Class copy assignment operator  */
+/*--------------------------------------*/
 RPN&	RPN::operator=( const RPN& other ) {
 
 	if ( this != &other )
@@ -24,8 +33,14 @@ RPN&	RPN::operator=( const RPN& other ) {
 	return *this;
 }
 
+/*------------------------*/
+/*  RPN Class destructor  */
+/*------------------------*/
 RPN::~RPN( void ) {}
 
+/*-----------------------------*/
+/*  Define calculate function  */
+/*-----------------------------*/
 int	RPN::calculate( const std::string& expression ) {
 
 	std::istringstream	tokens( expression );

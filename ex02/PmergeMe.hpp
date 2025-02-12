@@ -6,7 +6,7 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/19 19:17:03 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/02/11 22:12:21 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/02/12 09:57:46 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,16 +23,25 @@
 #include <chrono>
 #include <cmath>
 
+/*----------------------*/
+/*  Define Prefix enum  */
+/*----------------------*/
 enum	Prefix { BEFORE, AFTER };
 
+/*-----------------------*/
+/*  Define Index struct  */
+/*-----------------------*/
 struct	Index {
 	size_t	constIndex;
 	size_t	actualIndex;
 
-	// Optional constructor for convenience
-	Index( size_t constIdx, size_t actualIdx ) : constIndex( constIdx ), actualIndex( actualIdx ) {}
+	Index( size_t constant, size_t actual ) : constIndex( constant ),
+											  actualIndex( actual ) {}
 };
 
+/*-------------------------*/
+/*  Define PmergeMe class  */
+/*-------------------------*/
 class	PmergeMe {
 
 private:
@@ -58,7 +67,8 @@ private:
 
 	template <typename Container>
 	size_t		_binarySearchInsert( Container& dst, size_t dstEnd, const Container& src,
-									typename Container::const_iterator srcIt, size_t elementSize );
+									typename Container::const_iterator srcIt,
+									size_t elementSize );
 
 	size_t		_findElementIndex( const std::vector<Index>& dst, size_t searchIndex );
 
@@ -66,15 +76,15 @@ private:
 
 	template <typename Container>
 	void		_insertElements( Container& mainChain, Container& smallers,
-									std::vector<Index>& largerIndexes,
-									typename Container::iterator smallCurrIt,
-									size_t elementsToInsert, size_t elementSize );
+								 std::vector<Index>& largerIndexes,
+								 typename Container::iterator smallCurrIt,
+								 size_t elementsToInsert, size_t elementSize );
 
 	template <typename Container>
 	void		_defineContainers( Container& data, size_t elementsNum, size_t elementSize,
-									 Container& mainChain,
-									 std::vector<Index>& largerIndexes,
-									 Container& smallers );
+									Container& mainChain,
+									std::vector<Index>& largerIndexes,
+									Container& smallers );
 
 	template <typename Container>
 	void		_sortInsertion( Container& data, size_t elementsNum, size_t elementSize );

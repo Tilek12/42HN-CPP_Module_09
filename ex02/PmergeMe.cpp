@@ -6,22 +6,31 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/19 19:28:41 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/02/11 22:46:09 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/02/12 10:31:04 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "PmergeMe.hpp"
 
+/*------------------------------*/
+/*  PmergeMe Class constructor  */
+/*------------------------------*/
 PmergeMe::PmergeMe( void ) : _comparisonCounter( 0 ),
 							 _vectorTime( 0.0 ),
 							 _dequeTime( 0.0 ) {}
 
+/*-----------------------------------*/
+/*  PmergeMe Class copy constructor  */
+/*-----------------------------------*/
 PmergeMe::PmergeMe( const PmergeMe& other ) : _comparisonCounter( other._comparisonCounter ),
 											  _vectorData( other._vectorData ),
 											  _vectorTime( other._vectorTime ),
 											  _dequeData( other._dequeData ),
 											  _dequeTime( other._dequeTime ) {}
 
+/*-------------------------------------------*/
+/*  PmergeMe Class copy assignment operator  */
+/*-------------------------------------------*/
 PmergeMe&	PmergeMe::operator=( const PmergeMe& other ) {
 
 	if ( this != &other ) {
@@ -35,6 +44,9 @@ PmergeMe&	PmergeMe::operator=( const PmergeMe& other ) {
 	return *this;
 }
 
+/*-----------------------------*/
+/*  PmergeMe Class destructor  */
+/*-----------------------------*/
 PmergeMe::~PmergeMe( void ) {}
 
 size_t	PmergeMe::_countPossibleComparisons( size_t n ) const {
@@ -47,6 +59,9 @@ size_t	PmergeMe::_countPossibleComparisons( size_t n ) const {
 	return result;
 }
 
+/*----------------------------------*/
+/*  Print elements of the sequence  */
+/*----------------------------------*/
 template <typename Container>
 void	PmergeMe::_printElements( Container& data ) const {
 
@@ -55,6 +70,9 @@ void	PmergeMe::_printElements( Container& data ) const {
 	std::cout << "\n---------------------------------------------\n\n";
 }
 
+/*-------------------------------*/
+/*  Print number of comparisons  */
+/*-------------------------------*/
 void	PmergeMe::_printComparisons( void ) const {
 
 	std::cout << "\n---------------------------------------------\n\n";
@@ -66,6 +84,9 @@ void	PmergeMe::_printComparisons( void ) const {
 	std::cout << "\n---------------------------------------------\n\n";
 }
 
+/*--------------------------------*/
+/*  Define _printResult function  */
+/*--------------------------------*/
 void	PmergeMe::_printResult( Prefix prefix ) const {
 
 	switch ( prefix ) {
@@ -100,6 +121,9 @@ void	PmergeMe::_printResult( Prefix prefix ) const {
 	}
 }
 
+/*--------------------------------------------------*/
+/*  Update current and previous Jacobsthal numbers  */
+/*--------------------------------------------------*/
 void	PmergeMe::_updateJacobsthal( size_t& currJacobsthal, size_t& prevJacobsthal ) {
 
 	size_t nextJacobsthal = currJacobsthal + 2 * prevJacobsthal;
@@ -107,6 +131,9 @@ void	PmergeMe::_updateJacobsthal( size_t& currJacobsthal, size_t& prevJacobsthal
 	currJacobsthal = nextJacobsthal;
 }
 
+/*-------------------------------------------------------*/
+/*  Update actual index of larger elements in mainChain  */
+/*-------------------------------------------------------*/
 void	PmergeMe::_updateIndexes( std::vector<Index>& dst , size_t insertPos ) {
 
 	for ( auto& index : dst ) {
@@ -115,9 +142,13 @@ void	PmergeMe::_updateIndexes( std::vector<Index>& dst , size_t insertPos ) {
 	}
 }
 
+/*--------------------------------------------------------*/
+/*  Use binary search to insert new element to mainChain  */
+/*-------------------------------------------------------*/
 template <typename Container>
 size_t	PmergeMe::_binarySearchInsert( Container& dst, size_t dstEnd, const Container& src,
-									typename Container::const_iterator srcIt, size_t elementSize ) {
+										typename Container::const_iterator srcIt,
+										size_t elementSize ) {
 	// Validate input parameters
 	if ( elementSize == 0 || dst.empty() || src.empty() || dstEnd > dst.size() / elementSize ||
 		srcIt < src.begin() || srcIt + elementSize > src.end() )
@@ -161,7 +192,9 @@ size_t	PmergeMe::_binarySearchInsert( Container& dst, size_t dstEnd, const Conta
 	return static_cast<size_t>(low);
 }
 
-// template <typename Container>
+/*---------------------------------------------------*/
+/*  Find larger element's actual index in mainChain  */
+/*---------------------------------------------------*/
 size_t	PmergeMe::_findElementIndex( const std::vector<Index>& dst, size_t searchIndex ) {
 
 	for ( const auto& index : dst ) {
@@ -173,6 +206,9 @@ size_t	PmergeMe::_findElementIndex( const std::vector<Index>& dst, size_t search
 	throw std::runtime_error( "Error: Element not found in dst!" );
 }
 
+/*----------------------------------------------*/
+/*  Check if the index exists in largerIndexes  */
+/*----------------------------------------------*/
 bool	PmergeMe::_isExist( const std::vector<Index>& dst, size_t searchIndex ) {
 
 	for ( const auto& index : dst ) {
@@ -183,6 +219,9 @@ bool	PmergeMe::_isExist( const std::vector<Index>& dst, size_t searchIndex ) {
 	return false;
 }
 
+/*----------------------------------------------------*/
+/*  Insert elements to mainChain using binary search  */
+/*----------------------------------------------------*/
 template <typename Container>
 void	PmergeMe::_insertElements( Container& mainChain, Container& smallers,
 									std::vector<Index>& largerIndexes,
@@ -211,6 +250,9 @@ void	PmergeMe::_insertElements( Container& mainChain, Container& smallers,
 	}
 }
 
+/*---------------------------------------------------------------------*/
+/*  Fill in sequences of smallerElements, largerIndexes and mainChain  */
+/*---------------------------------------------------------------------*/
 template <typename Container>
 void	PmergeMe::_defineContainers( Container& data, size_t elementsNum, size_t elementSize,
 									 Container& mainChain,
@@ -255,11 +297,14 @@ void	PmergeMe::_defineContainers( Container& data, size_t elementsNum, size_t el
 
 	size_t idxConst = 0;
 	size_t idxActual = 1;
-	for ( auto it = mainChain.begin() + elementSize; it != mainChain.end(); it += elementSize ) {
+	for ( auto it = mainChain.begin() + elementSize; it != mainChain.end(); it += elementSize )
 		largerIndexes.emplace_back( idxConst++, idxActual++ );
-	}
 }
 
+/*-----------------------------------------------------------*/
+/*  Step 2: divide elements to larger and smaller sequences  */
+/*          and insert smaller elements using binary search  */
+/*-----------------------------------------------------------*/
 template <typename Container>
 void	PmergeMe::_sortInsertion( Container& data, size_t elementsNum, size_t elementSize ) {
 
@@ -314,6 +359,9 @@ void	PmergeMe::_sortInsertion( Container& data, size_t elementsNum, size_t eleme
 	std::copy( mainChain.begin(), mainChain.end(), data.begin() );
 }
 
+/*--------------------------------------*/
+/*  Step 1: sort each pair of elements  */
+/*--------------------------------------*/
 template <typename Container>
 void	PmergeMe::_sortPairs( typename Container::iterator start,
 							  typename Container::iterator end, size_t elementSize ) {
@@ -341,6 +389,9 @@ void	PmergeMe::_sortPairs( typename Container::iterator start,
 	}
 }
 
+/*----------------------------------------------------*/
+/*  Ford-Johnson (merge insertion) sorting algorithm  */
+/*----------------------------------------------------*/
 template <typename Container>
 void	PmergeMe::_sortFordJohnson( Container& data, size_t elementSize ) {
 
@@ -363,6 +414,9 @@ void	PmergeMe::_sortFordJohnson( Container& data, size_t elementSize ) {
 	_sortInsertion( data, elementsNum, elementSize );
 }
 
+/*--------------------*/
+/*  Parse input data  */
+/*--------------------*/
 void	PmergeMe::parseInput( int argc, char** argv ) {
 
 	for ( int i = 1; i < argc; i++ ) {
@@ -377,6 +431,9 @@ void	PmergeMe::parseInput( int argc, char** argv ) {
 	}
 }
 
+/*-----------------*/
+/*  Start sorting  */
+/*-----------------*/
 void	PmergeMe::sortData( void ) {
 
 	_printResult( BEFORE );

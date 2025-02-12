@@ -6,12 +6,15 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/17 13:22:09 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/17 19:47:28 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/02/12 09:52:05 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "BitcoinExchange.hpp"
 
+/*-----------------*/
+/*  Main function  */
+/*-----------------*/
 int	main( int argc, char** argv ) {
 
 	if ( argc != 2 ) {

@@ -6,12 +6,15 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/18 20:51:30 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/18 20:55:36 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/02/12 09:54:58 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "RPN.hpp"
 
+/*-----------------*/
+/*  Main function  */
+/*-----------------*/
 int	main( int argc, char* argv[] ) {
 
 	if ( argc != 2 ) {

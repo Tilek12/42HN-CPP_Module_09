@@ -6,19 +6,28 @@
 /*   By: tkubanyc <tkubanyc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/16 19:54:39 by tkubanyc          #+#    #+#             */
-/*   Updated: 2025/01/18 13:23:29 by tkubanyc         ###   ########.fr       */
+/*   Updated: 2025/02/12 09:51:22 by tkubanyc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "BitcoinExchange.hpp"
 
+/*-------------------------------------*/
+/*  BitcoinExchange Class constructor  */
+/*-------------------------------------*/
 BitcoinExchange::BitcoinExchange( const std::string& databaseFile ) {
 	_loadDatabase( databaseFile );
 }
 
+/*------------------------------------------*/
+/*  BitcoinExchange Class copy constructor  */
+/*------------------------------------------*/
 BitcoinExchange::BitcoinExchange( const BitcoinExchange& other )
 	: _database( other._database ) {}
 
+/*--------------------------------------------------*/
+/*  BitcoinExchange Class copy assignment operator  */
+/*--------------------------------------------------*/
 BitcoinExchange&	BitcoinExchange::operator=( const BitcoinExchange& other ) {
 
 	if ( this != &other )
@@ -27,14 +36,23 @@ BitcoinExchange&	BitcoinExchange::operator=( const BitcoinExchange& other ) {
 	return *this;
 }
 
+/*------------------------------------*/
+/*  BitcoinExchange Class destructor  */
+/*------------------------------------*/
 BitcoinExchange::~BitcoinExchange( void ) {}
 
+/*-------------------------*/
+/*  Define _trim function  */
+/*-------------------------*/
 std::string	BitcoinExchange::_trim( const std::string& str ) const {
 	size_t start = str.find_first_not_of( " \t\n\r" );
 	size_t end = str.find_last_not_of( " \t\n\r" );
 	return ( start == std::string::npos ) ? "" : str.substr( start, end - start + 1 );
 }
 
+/*---------------------------------*/
+/*  Define _loadDatabase function  */
+/*---------------------------------*/
 void	BitcoinExchange::_loadDatabase( const std::string& databaseFile ) {
 
 	std::ifstream	file( databaseFile );
@@ -72,6 +90,9 @@ void	BitcoinExchange::_loadDatabase( const std::string& databaseFile ) {
 	}
 }
 
+/*--------------------------------*/
+/*  Define _isValidDate function  */
+/*--------------------------------*/
 bool	BitcoinExchange::_isValidDate( const std::string& date ) const {
 
 	if ( date.size() != 10 || date[4] != '-' || date[7] != '-' )
@@ -101,6 +122,9 @@ bool	BitcoinExchange::_isValidDate( const std::string& date ) const {
 	return true;
 }
 
+/*-------------------------------*/
+/*  Define _checkValue function  */
+/*-------------------------------*/
 std::string	BitcoinExchange::_checkValue( const std::string& valueStr ) const {
 
 	try {
@@ -118,6 +142,9 @@ std::string	BitcoinExchange::_checkValue( const std::string& valueStr ) const {
 	}
 }
 
+/*------------------------------------*/
+/*  Define _findClosestDate function  */
+/*------------------------------------*/
 std::string	BitcoinExchange::_findClosestDate( const std::string& date ) const {
 
 	auto it = _database.lower_bound( date );
@@ -128,6 +155,9 @@ std::string	BitcoinExchange::_findClosestDate( const std::string& date ) const {
 	return ( it == _database.end() ) ? "" : it->first;
 }
 
+/*----------------------------*/
+/*  Define evaluate function  */
+/*----------------------------*/
 void	BitcoinExchange::evaluate( const std::string& inputFile ) const {
 
 	std::ifstream file( inputFile );

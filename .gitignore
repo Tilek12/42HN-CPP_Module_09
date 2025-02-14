@@ -1,7 +1,5 @@
 .DS_Store
 *.o
-data.csv
-input.txt
 btc
 RPN
 PmergeMe
